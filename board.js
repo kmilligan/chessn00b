@@ -6,6 +6,8 @@ var BoardFactory;
 // scope wrapper
 (function() 
 {
+	"use strict";
+
 	// Map of pieces to unicode characters
 	var PieceMap =
 	{
@@ -21,6 +23,11 @@ var BoardFactory;
 		'q': '\u265b',
 		'k': '\u265a',
 		'p': '\u265f'
+	};
+
+	PieceMap.isWhite = function(piece)
+	{
+		return(piece.charCodeAt(0) < 91?true:false);
 	};
 
 	// Map file numbers to letter names
@@ -76,6 +83,11 @@ var BoardFactory;
 	Square.removePiece = function()
 	{
 		this.piece = '';
+	};
+
+	Square.hasPiece = function()
+	{
+		return (this.piece == ''?false:true);
 	};
 
 	Square.getPiece = function()
@@ -140,14 +152,113 @@ var BoardFactory;
 
 	Board.getWhitesCoveredSquares = function()
 	{
-		return [];
+		this.determineCoveredSquares();
+		return this.whiteCoveredSquares;
 	};
 
 	Board.getBlacksCoveredSquares = function()
 	{
-		return [];
+		this.determineCoveredSquares();
+		return this.blackCoveredSquares;
 	};
 
+	Board.determineCoveredSquares = function()
+	{
+		this.whiteCoveredSquares = [];
+		this.blackCoveredSquares = [];
+
+		// loop all the squares, finding the ones with pieces
+		// for each piece, determine coverage
+		var covered;
+		for(var f = 1; f < 9; f++)
+		{
+			for(var r = 1; r < 9; r++)
+			{
+				if(!this.squares[f][r].hasPiece())
+					continue;
+
+				covered = this.getCoveredSquares(f,r);
+
+				// push onto the appropriate color array
+				var arr = this.blackCoveredSquares;
+				if(PieceMap.isWhite(this.squares[f][r].getPiece()))
+					arr = this.whiteCoveredSquares;
+
+				for(var i = 0; i < covered.length; i++)
+					arr.push(covered[i]);
+			}
+		}
+	};
+
+	Board.getCoveredSquares = function(file, rank)
+	{
+		var result = [];
+
+		switch(this.squares[file][rank].getPiece())
+		{
+			case 'K':
+			case 'k':
+				result = this.getStraightOptions(file,rank,1);
+				var diag = this.getDiagonalOptions(file,rank,1);
+				for(var i = 0; i < diag.length; i++)
+					result.push(diag[i]);
+			break;
+			default:
+				// nothing to do
+			break;
+		}
+
+		return result;
+	};
+
+	Board.getStraightOptions = function(file,rank,limit)
+	{
+		//console.log(FileMap[file] + rank);
+		var options = [];
+		for(var i = 1; i <= limit; i++)
+		{
+			if(rank + i < 9)
+				options.push(this.squares[file][rank + i]);
+
+			if(file + i < 9)
+				options.push(this.squares[file + i][rank]);
+
+			if(rank - i > 0)
+				options.push(this.squares[file][rank - i]);
+
+			if(file - i > 0)
+				options.push(this.squares[file - i][rank]);
+		}
+
+		return options;
+	};
+
+	Board.getDiagonalOptions = function(file,rank,limit)
+	{
+		var options = [];
+		for(var i = 1; i <= limit; i++)
+		{
+			if(rank + i < 9)
+			{
+				if(file + i < 9)
+					options.push(this.squares[file + i][rank + i]);
+
+				if(file - i > 0)
+					options.push(this.squares[file - i][rank + i]);
+			}
+
+			if(rank - i > 0)
+			{
+				if(file + i < 9)
+					options.push(this.squares[file + i][rank - i]);
+
+				if(file - i > 0)
+					options.push(this.squares[file - i][rank - i]);
+			}
+		}
+
+		return options;
+	};
 
 	Board.setFEN = function(fen)
 	{
@@ -163,11 +274,11 @@ var BoardFactory;
 		// setup the state
 		this.colorToMove = (parts[1] == 'w'?1:0);
 	};
-	
+
 	Board.setRankFEN = function(rank, fen)
 	{
 		var sqs = fen.split('');
-		file = 1;
+		var file = 1;
 		for(var idx in sqs)
 		{
 			// may have reached the end
@@ -191,7 +302,6 @@ var BoardFactory;
 			}
 		}
 	};
-
 
 	// create a new board
 	BoardFactory = (function()
