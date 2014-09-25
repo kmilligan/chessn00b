@@ -5,6 +5,8 @@ $.getScript('../board.js', function()
 	test("FEN", testFEN);
 	test("SimpleCoverage", testSimpleCoverage);
 	test("LessSimpleCoverage", testLessSimpleCoverage);
+	test("FindPiece", testFindPiece);
+	test("SquareAttacked", testIsSquareAttacked);
 });
 
 var testCreateBoard = function()
@@ -116,10 +118,28 @@ var testLessSimpleCoverage = function()
 
 var testFindPiece = function()
 {
+	var board = BoardFactory.create();
+	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
 
+	equal(board.findPiece('K')[0].getPiece(), 'K');
+	equal(board.findPiece('k')[0].getPiece(), 'k');
 };
 
 var testIsSquareAttacked = function()
 {
+	var board = BoardFactory.create();
+	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	ok(!board.isSquareAttacked(board.findPiece('K')[0]));
+	ok(!board.isSquareAttacked(board.findPiece('k')[0]));
 
+	// black king protected, white not
+	board.setFEN('kp5R/8/8/8/8/q7/PK6/8 w - 0 1');	
+	//board.dump();
+	ok(board.isSquareAttacked(board.findPiece('K')[0]));
+	ok(!board.isSquareAttacked(board.findPiece('k')[0]));
+
+	// can't protect against the knight!
+	board.setFEN('kp6/2N5/8/8/1q6/1P6/PK6/8 w - 0 1');	
+	ok(!board.isSquareAttacked(board.findPiece('K')[0]));
+	ok(board.isSquareAttacked(board.findPiece('k')[0]));
 };

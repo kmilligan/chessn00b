@@ -270,7 +270,7 @@ var BoardFactory;
 			if(file - i > 0 && !stop4)
 			{
 				options.push(this.squares[file - i][rank]);
-				if(this.squares[file + i][rank].hasPiece())
+				if(this.squares[file - i][rank].hasPiece())
 					stop4 = true;
 			}
 		}
@@ -406,6 +406,43 @@ var BoardFactory;
 		return options;
 	};
 
+	Board.findPiece = function(piece)
+	{
+		var found = [];
+		for(var f = 1; f < 9; f++)
+		{
+			for(var r = 1; r < 9; r++)
+			{
+				if(!this.squares[f][r].hasPiece())
+					continue;
+
+				if(this.squares[f][r].getPiece() == piece)
+					found.push(this.squares[f][r]);
+			}
+		}
+		return found;
+	};
+
+	Board.isSquareAttacked = function(square)
+	{
+		if(!square.hasPiece())
+			return false;
+
+		var covers;
+		if(PieceMap.isWhite(square.getPiece()))
+			covers = this.getBlacksCoveredSquares();
+		else
+			covers = this.getWhitesCoveredSquares();
+
+		for(var i = 0; i < covers.length; i++)
+		{
+			if(covers[i] === square)
+				return true;
+		}
+
+		return false;
+	};
+
 	Board.setFEN = function(fen)
 	{
 		var parts = fen.split(' ');
@@ -448,6 +485,27 @@ var BoardFactory;
 			}
 		}
 	};
+
+	Board.dump = function()
+	{
+		var divider = '-----------------';
+		console.log(divider);
+		for(var r = 8; r > 0; r--)
+		{
+			var rankOut = '|';
+			for(var f = 1; f < 9; f++)
+			{
+				if(!this.squares[f][r].hasPiece())
+					rankOut += ' ';
+				else
+					rankOut += this.squares[f][r].getPiece();
+
+				rankOut += '|';
+			}
+			console.log(rankOut);
+			console.log(divider);
+		}
+	}
 
 	// create a new board
 	BoardFactory = (function()
