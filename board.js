@@ -193,20 +193,44 @@ var BoardFactory;
 	Board.getCoveredSquares = function(file, rank)
 	{
 		var result = [];
+		var diag = [];
 
 		switch(this.squares[file][rank].getPiece())
 		{
 			case 'K':
 			case 'k':
 				result = this.getStraightOptions(file,rank,1);
-				var diag = this.getDiagonalOptions(file,rank,1);
-				for(var i = 0; i < diag.length; i++)
-					result.push(diag[i]);
+				diag = this.getDiagonalOptions(file,rank,1);
+			break;
+			case 'Q':
+			case 'q':
+				result = this.getStraightOptions(file,rank,8);
+				diag = this.getDiagonalOptions(file,rank,8);
+			break;
+			case 'R':
+			case 'r':
+				result = this.getStraightOptions(file,rank,8);
+			break;
+			case 'B':
+			case 'b':
+				diag = this.getDiagonalOptions(file,rank,8);
+			break;
+			case 'N':
+			case 'n':
+				result = this.getKnightOptions(file,rank);
+			break;
+			case 'P':
+			case 'p':
+				result = this.getPawnOptions(file,rank);
 			break;
 			default:
 				// nothing to do
 			break;
 		}
+
+		// tack on the diag
+		for(var i = 0; i < diag.length; i++)
+			result.push(diag[i]);
 
 		return result;
 	};
@@ -235,28 +259,129 @@ var BoardFactory;
 
 	Board.getDiagonalOptions = function(file,rank,limit)
 	{
+		// keep track when we run into something in each direction
+		var stop1 = false;
+		var stop2 = false;
+		var stop3 = false;
+		var stop4 = false;
+		var currF, currR;
 		var options = [];
 		for(var i = 1; i <= limit; i++)
 		{
 			if(rank + i < 9)
 			{
-				if(file + i < 9)
-					options.push(this.squares[file + i][rank + i]);
+				currR = rank + i;
+				if(file + i < 9 && !stop1)
+				{
+					currF = file + i;
+					options.push(this.squares[currF][currR]);
+					if(this.squares[currF][currR].hasPiece())
+						stop1 = true;
+				}
 
-				if(file - i > 0)
-					options.push(this.squares[file - i][rank + i]);
+				if(file - i > 0 && !stop2)
+				{
+					currF = file - i;
+					options.push(this.squares[currF][currR]);
+					if(this.squares[currF][currR].hasPiece())
+						stop2 = true;
+				}
 			}
 
 			if(rank - i > 0)
 			{
-				if(file + i < 9)
-					options.push(this.squares[file + i][rank - i]);
+				currR = rank - i;
+				if(file + i < 9 && !stop3)
+				{
+					currF = file + i;
+					options.push(this.squares[currF][currR]);
+					if(this.squares[currF][currR].hasPiece())
+						stop3 = true;
+				}
 
-				if(file - i > 0)
-					options.push(this.squares[file - i][rank - i]);
+				if(file - i > 0 && !stop4)
+				{
+					currF = file - i;
+					options.push(this.squares[currF][currR]);
+					if(this.squares[currF][currR].hasPiece())
+						stop4 = true;
+				}
 			}
 		}
 
+		return options;
+	};
+
+	Board.getKnightOptions = function(file,rank)
+	{
+		var options = [];
+		if(file - 1 > 0)
+		{
+			if(rank + 2 < 9)
+				options.push(this.squares[file - 1][rank + 2]);
+
+			if(rank - 2 > 0)
+				options.push(this.squares[file - 1][rank - 2]);
+
+			if(file - 2 > 0)
+			{
+				if(rank + 1 < 9)
+					options.push(this.squares[file - 2][rank + 1]);
+
+				if(rank - 1 < 9)
+					options.push(this.squares[file - 2][rank - 1]);
+			}
+		}
+
+		if(file + 1 < 9)
+		{
+			if(rank + 2 < 9)
+				options.push(this.squares[file + 1][rank + 2]);
+
+			if(rank - 2 > 0)
+				options.push(this.squares[file + 1][rank - 2]);
+
+			if(file + 2 < 9)
+			{
+				if(rank + 1 < 9)
+					options.push(this.squares[file + 2][rank + 1]);
+
+				if(rank - 1 < 9)
+					options.push(this.squares[file + 2][rank - 1]);
+			}
+		}
+
+		return options;
+	};
+
+	Board.getPawnOptions = function(file,rank)
+	{
+		var options = [];
+		
+		// need the color for direction
+		if(PieceMap.isWhite(this.squares[file][rank].getPiece()))
+		{
+			if(rank < 8)
+			{
+				if(file > 1)
+					options.push(this.squares[file - 1][rank + 1]);
+
+				if(file < 8)
+					options.push(this.squares[file + 1][rank + 1]);
+			}
+		}
+		else
+		{
+			if(rank > 1)
+			{
+				if(file > 1)
+					options.push(this.squares[file - 1][rank - 1]);
+
+				if(file < 8)
+					options.push(this.squares[file + 1][rank - 1]);
+			}
+		}
+		
 		return options;
 	};
 
