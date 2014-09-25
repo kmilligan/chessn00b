@@ -237,21 +237,42 @@ var BoardFactory;
 
 	Board.getStraightOptions = function(file,rank,limit)
 	{
+		// keep track when we run into something in each direction
+		var stop1 = false;
+		var stop2 = false;
+		var stop3 = false;
+		var stop4 = false;
 		//console.log(FileMap[file] + rank);
 		var options = [];
 		for(var i = 1; i <= limit; i++)
 		{
-			if(rank + i < 9)
+			if(rank + i < 9 && !stop1)
+			{
 				options.push(this.squares[file][rank + i]);
+				if(this.squares[file][rank + i].hasPiece())
+					stop1 = true;
+			}
 
-			if(file + i < 9)
+			if(file + i < 9 && !stop2)
+			{
 				options.push(this.squares[file + i][rank]);
+				if(this.squares[file + i][rank].hasPiece())
+					stop2 = true;
+			}
 
-			if(rank - i > 0)
+			if(rank - i > 0 && !stop3)
+			{
 				options.push(this.squares[file][rank - i]);
+				if(this.squares[file][rank - i].hasPiece())
+					stop3 = true;
+			}
 
-			if(file - i > 0)
+			if(file - i > 0 && !stop4)
+			{
 				options.push(this.squares[file - i][rank]);
+				if(this.squares[file + i][rank].hasPiece())
+					stop4 = true;
+			}
 		}
 
 		return options;

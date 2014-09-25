@@ -83,48 +83,43 @@ var testSimpleCoverage = function()
 
 var testLessSimpleCoverage = function()
 {
+	// king coverage shouldn't change, but others should add
 	var board = BoardFactory.create();
-	board.setFEN('k7/8/8/8/8/8/1K6/8 w - 0 1');	
+	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
 	equal(board.getSquare(1,8).getPiece(), 'k');
 	equal(board.getSquare(2,2).getPiece(), 'K');
 
 	var coverageWhite = board.getWhitesCoveredSquares();
-	equal(coverageWhite.length, 8);
+	equal(coverageWhite.length, 9);
 
 	var coverageBlack = board.getBlacksCoveredSquares();
-	equal(coverageBlack.length, 3);
-	
+	equal(coverageBlack.length, 5);
+
+	// Queens are now blocked, reducing scope
 	board.setFEN('qp6/8/8/8/8/1P6/1QP5/8 w - 0 1');	
 	equal(board.getSquare(1,8).getPiece(), 'q');
 	equal(board.getSquare(2,2).getPiece(), 'Q');
 
 	var coverageWhite = board.getWhitesCoveredSquares();
-	equal(coverageWhite.length, 11);
+	equal(coverageWhite.length, 17);
 
 	var coverageBlack = board.getBlacksCoveredSquares();
-	equal(coverageBlack.length, 15);
+	equal(coverageBlack.length, 17);
 
-	board.setFEN('r7/8/8/8/8/8/1R6/8 w - 0 1');	
-	var coverageWhite = board.getWhitesCoveredSquares();
-	equal(coverageWhite.length, 14);
-	var coverageBlack = board.getBlacksCoveredSquares();
-	equal(coverageBlack.length, 14);
-
-	board.setFEN('b7/8/8/8/8/8/1B6/8 w - 0 1');	
-	var coverageWhite = board.getWhitesCoveredSquares();
-	equal(coverageWhite.length, 9);
-	var coverageBlack = board.getBlacksCoveredSquares();
-	equal(coverageBlack.length, 7);
-
-	board.setFEN('n7/8/8/8/8/8/1N6/8 w - 0 1');	
+	// knights remain unaffected
+	board.setFEN('n7/8/1r6/8/8/8/1N6/8 w - 0 1');	
 	var coverageWhite = board.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 4);
 	var coverageBlack = board.getBlacksCoveredSquares();
-	equal(coverageBlack.length, 2);
-	
-	board.setFEN('p7/8/8/8/8/8/1P6/8 w - 0 1');	
-	var coverageWhite = board.getWhitesCoveredSquares();
-	equal(coverageWhite.length, 2);
-	var coverageBlack = board.getBlacksCoveredSquares();
-	equal(coverageBlack.length, 1);
+	equal(coverageBlack.length, 15);
+};
+
+var testFindPiece = function()
+{
+
+};
+
+var testIsSquareAttacked = function()
+{
+
 };
