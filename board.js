@@ -486,6 +486,27 @@ var BoardFactory;
 		}
 	};
 
+	Board.blackInCheck = function()
+	{
+		return this.isSquareAttacked(this.findPiece('k')[0]);
+	};
+
+	Board.whiteInCheck = function()
+	{
+		return this.isSquareAttacked(this.findPiece('K')[0]);
+	};
+
+	Board.blackInCheckmate = function()
+	{
+		return this.isSquareAttacked(this.findPiece('k')[0]);
+	};
+
+	Board.whiteInCheckmate = function()
+	{
+		return this.isSquareAttacked(this.findPiece('K')[0]);
+	};
+
+
 	Board.dump = function()
 	{
 		var divider = '-----------------';

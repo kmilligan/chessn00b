@@ -7,6 +7,8 @@ $.getScript('../board.js', function()
 	test("LessSimpleCoverage", testLessSimpleCoverage);
 	test("FindPiece", testFindPiece);
 	test("SquareAttacked", testIsSquareAttacked);
+	test("InCheck", testInCheck);
+	test("InCheckmate", testInCheckmate);
 });
 
 var testCreateBoard = function()
@@ -116,6 +118,16 @@ var testLessSimpleCoverage = function()
 	equal(coverageBlack.length, 15);
 };
 
+var testSimpleValidMoves = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	equal(board.getSquare(1,8).getPiece(), 'k');
+	equal(board.getSquare(2,2).getPiece(), 'K');
+
+	equal(board.getValidMovesForSquare(1,8), 2);
+};
+
 var testFindPiece = function()
 {
 	var board = BoardFactory.create();
@@ -142,4 +154,32 @@ var testIsSquareAttacked = function()
 	board.setFEN('kp6/2N5/8/8/1q6/1P6/PK6/8 w - 0 1');	
 	ok(!board.isSquareAttacked(board.findPiece('K')[0]));
 	ok(board.isSquareAttacked(board.findPiece('k')[0]));
+};
+
+var testInCheck = function()
+{
+	// have to take into account
+	// a) being attacked
+	// b) who has the move? shouldn't matter?
+
+	var board = BoardFactory.create();
+	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	ok(!board.blackInCheck());	
+	ok(!board.whiteInCheck());	
+
+	board.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - 0 1');	
+	ok(!board.blackInCheck());	
+	ok(board.whiteInCheck());	
+};
+
+var testInCheckmate = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	ok(!board.blackInCheckmate());	
+	ok(!board.whiteInCheckmate());	
+
+	board.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - 0 1');	
+	ok(!board.blackInCheckmate());	
+	ok(!board.whiteInCheckmate());	
 };
