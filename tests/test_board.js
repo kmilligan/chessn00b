@@ -5,6 +5,7 @@ $.getScript('../board.js', function()
 	test("FEN", testFEN);
 	test("SimpleCoverage", testSimpleCoverage);
 	test("LessSimpleCoverage", testLessSimpleCoverage);
+	test("SimpleValidMoves", testSimpleValidMoves);
 	test("FindPiece", testFindPiece);
 	test("SquareAttacked", testIsSquareAttacked);
 	test("InCheck", testInCheck);
@@ -125,7 +126,9 @@ var testSimpleValidMoves = function()
 	equal(board.getSquare(1,8).getPiece(), 'k');
 	equal(board.getSquare(2,2).getPiece(), 'K');
 
-	equal(board.getValidMovesForSquare(1,8), 2);
+	equal(board.getValidMovesForSquare(1,8).length, 2);
+
+	// king can't move into check!
 };
 
 var testFindPiece = function()

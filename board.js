@@ -162,6 +162,38 @@ var BoardFactory;
 		return this.blackCoveredSquares;
 	};
 
+	Board.getValidMovesForSquare = function(fileOrSquare, rank)
+	{
+		var result = [];
+		var square;
+		if(typeof fileOrSquare == 'object')
+			square = fileOrSquare;
+		else
+			square = this.squares[fileOrSquare][rank];
+
+		if(!square.hasPiece())
+			return result;
+
+		var color = PieceMap.isWhite(square.getPiece());
+
+		var possible = this.getCoveredSquares(square);
+
+		if(possible.length == 0)
+			return result;
+
+		for(var i = 0; i < possible.length; i++)
+		{
+			// can't move to where our own pieces are
+			if(possible[i].hasPiece()
+				&& PieceMap.isWhite(possible[i].getPiece()) == color)
+				continue;
+		
+			result.push(possible[i]);
+		}
+
+		return result;
+	};
+
 	Board.determineCoveredSquares = function()
 	{
 		this.whiteCoveredSquares = [];
@@ -190,8 +222,19 @@ var BoardFactory;
 		}
 	};
 
-	Board.getCoveredSquares = function(file, rank)
+	Board.getCoveredSquares = function(fileOrSquare, rank)
 	{
+		var file;
+		if(typeof fileOrSquare == 'object')
+		{
+			file = fileOrSquare.file;
+			rank = fileOrSquare.rank;
+		}
+		else
+		{
+			file = fileOrSquare;
+		}
+
 		var result = [];
 		var diag = [];
 
@@ -498,12 +541,16 @@ var BoardFactory;
 
 	Board.blackInCheckmate = function()
 	{
-		return this.isSquareAttacked(this.findPiece('k')[0]);
+		var kingSquare = this.findPiece('k')[0];
+		return (this.isSquareAttacked(kingSquare)
+				&& this.getValidMovesForSquare(kingSquare).length == 0);
 	};
 
 	Board.whiteInCheckmate = function()
 	{
-		return this.isSquareAttacked(this.findPiece('K')[0]);
+		var kingSquare = this.findPiece('K')[0];
+		return (this.isSquareAttacked(kingSquare)
+				&& this.getValidMovesForSquare(kingSquare).length == 0);
 	};
 
 
