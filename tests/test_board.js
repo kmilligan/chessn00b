@@ -202,7 +202,6 @@ var testInCheckmate = function()
 	// but *would be* if the King wanted to go there.
 	board.setFEN('8/8/8/8/1k6/2q5/PK6/1R6 w - 0 1');	
 	equal(board.getValidMovesForSquare(2,2).length, 0);
-	console.log(board.getValidMovesForSquare(2,2));
 	ok(board.whiteInCheckmate());	
 };
 

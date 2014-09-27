@@ -191,7 +191,7 @@ var BoardFactory;
 			// need a "no king" version of the board
 			// to look for x-rays
 			var noKingBoard = BoardFactory.create();
-			noKingBoard.setFEN(this.getPositionFEN().replace(/kK/,'1'));
+			noKingBoard.setFEN(this.getPositionFEN().replace(/[kK]/g,'1'));
 		}
 
 		var possible = this.getCoveredSquares(square);
@@ -217,7 +217,6 @@ var BoardFactory;
 				if((isWhite && noKingBoard.isSquareAttackedByBlack(possible[i].file, possible[i].rank))
 					|| (!isWhite && noKingBoard.isSquareAttackedByWhite(possible[i].file, possible[i].rank)))
 					continue;
-
 			}
 
 			result.push(possible[i]);
@@ -523,8 +522,14 @@ var BoardFactory;
 		return false;
 	};
 
-	Board.isSquareAttackedByWhite = function(square)
+	Board.isSquareAttackedByWhite = function(fileOrSquare, rank)
 	{
+		var square;
+		if(typeof fileOrSquare == 'object')
+			square = fileOrSquare;
+		else
+			square = this.squares[fileOrSquare][rank];
+
 		var covers = this.getWhitesCoveredSquares();
 
 		for(var i = 0; i < covers.length; i++)
@@ -536,8 +541,14 @@ var BoardFactory;
 		return false;
 	};
 
-	Board.isSquareAttackedByBlack = function(square)
+	Board.isSquareAttackedByBlack = function(fileOrSquare, rank)
 	{
+		var square;
+		if(typeof fileOrSquare == 'object')
+			square = fileOrSquare;
+		else
+			square = this.squares[fileOrSquare][rank];
+
 		var covers = this.getBlacksCoveredSquares();
 
 		for(var i = 0; i < covers.length; i++)
