@@ -174,7 +174,9 @@ var BoardFactory;
 		if(!square.hasPiece())
 			return result;
 
-		var color = PieceMap.isWhite(square.getPiece());
+		var piece = square.getPiece();
+		var isWhite = PieceMap.isWhite(piece);
+		var isKing = (piece == 'k' || piece == 'K')?true:false;
 
 		var possible = this.getCoveredSquares(square);
 
@@ -185,9 +187,17 @@ var BoardFactory;
 		{
 			// can't move to where our own pieces are
 			if(possible[i].hasPiece()
-				&& PieceMap.isWhite(possible[i].getPiece()) == color)
+				&& PieceMap.isWhite(possible[i].getPiece()) == isWhite)
 				continue;
-		
+
+			// king can't move into check
+			if(isKing)
+			{
+				if((isWhite && this.isSquareAttackedByBlack(possible[i]))
+					|| (!isWhite && this.isSquareAttackedByWhite(possible[i])))
+					continue;
+			}
+
 			result.push(possible[i]);
 		}
 
@@ -476,6 +486,32 @@ var BoardFactory;
 			covers = this.getBlacksCoveredSquares();
 		else
 			covers = this.getWhitesCoveredSquares();
+
+		for(var i = 0; i < covers.length; i++)
+		{
+			if(covers[i] === square)
+				return true;
+		}
+
+		return false;
+	};
+
+	Board.isSquareAttackedByWhite = function(square)
+	{
+		var covers = this.getWhitesCoveredSquares();
+
+		for(var i = 0; i < covers.length; i++)
+		{
+			if(covers[i] === square)
+				return true;
+		}
+
+		return false;
+	};
+
+	Board.isSquareAttackedByBlack = function(square)
+	{
+		var covers = this.getBlacksCoveredSquares();
 
 		for(var i = 0; i < covers.length; i++)
 		{

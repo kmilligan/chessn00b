@@ -122,13 +122,19 @@ var testLessSimpleCoverage = function()
 var testSimpleValidMoves = function()
 {
 	var board = BoardFactory.create();
-	board.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	board.setFEN('kp6/8/8/8/8/r7/PK6/8 w - 0 1');	
 	equal(board.getSquare(1,8).getPiece(), 'k');
 	equal(board.getSquare(2,2).getPiece(), 'K');
 
 	equal(board.getValidMovesForSquare(1,8).length, 2);
 
-	// king can't move into check!
+	// king can't move into check! but can take the rook...
+	ok(board.isSquareAttackedByBlack(board.getSquare(2,3)));
+	equal(board.getValidMovesForSquare(2,2).length, 5);
+
+	// ...unless it's protected
+	board.setFEN('kp6/8/8/8/1p6/r7/PK6/8 w - 0 1');	
+	equal(board.getValidMovesForSquare(2,2).length, 4);
 };
 
 var testFindPiece = function()
