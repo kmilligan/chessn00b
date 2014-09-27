@@ -125,15 +125,23 @@ var BoardFactory;
 		return this;
 	};
 
+	Board.resetCaches = function()
+	{
+		this.whiteCoveredSquares = [];
+		this.blackCoveredSquares = [];
+		this.whiteStaticValue = 0;
+		this.blackStaticValue = 0;
+	};
+
 	Board.setPiece = function(piece, file, rank)
 	{
 		this.squares[file][rank].setPiece(piece);
-	}
+	};
 	
 	Board.removePiece = function(file, rank)
 	{
 		this.squares[file][rank].removePiece();
-	}
+	};
 
 	Board.getPiece = function(file, rank)
 	{
@@ -178,6 +186,14 @@ var BoardFactory;
 		var isWhite = PieceMap.isWhite(piece);
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
 
+		if(isKing)
+		{
+			// need a "no king" version of the board
+			// to look for x-rays
+			var noKingBoard = BoardFactory.create();
+			noKingBoard.setFEN(this.getPositionFEN().replace(/kK/,'1'));
+		}
+
 		var possible = this.getCoveredSquares(square);
 
 		if(possible.length == 0)
@@ -196,6 +212,12 @@ var BoardFactory;
 				if((isWhite && this.isSquareAttackedByBlack(possible[i]))
 					|| (!isWhite && this.isSquareAttackedByWhite(possible[i])))
 					continue;
+
+				// also have to test if squares *would be* in check.
+				if((isWhite && noKingBoard.isSquareAttackedByBlack(possible[i].file, possible[i].rank))
+					|| (!isWhite && noKingBoard.isSquareAttackedByWhite(possible[i].file, possible[i].rank)))
+					continue;
+
 			}
 
 			result.push(possible[i]);
@@ -206,6 +228,11 @@ var BoardFactory;
 
 	Board.determineCoveredSquares = function()
 	{
+		// already figured this out?
+		if( this.whiteCoveredSquares.length > 0
+			|| this.blackCoveredSquares.legnth > 0 )
+			return;
+
 		this.whiteCoveredSquares = [];
 		this.blackCoveredSquares = [];
 
@@ -522,8 +549,45 @@ var BoardFactory;
 		return false;
 	};
 
+	Board.getPositionFEN = function()
+	{
+		var ranks = [];
+		for(var r = 8; r > 0; r--)
+		{
+			var currRank = '';
+			var empty = 0;
+			for(var f = 1; f < 9; f++)
+			{
+				if(!this.squares[f][r].hasPiece())
+				{
+					empty++;
+					continue;
+				}
+
+				if(empty > 0)
+				{
+					currRank += empty;
+					empty = 0;
+				}
+
+				currRank += this.squares[f][r].getPiece();
+			}
+			
+			if(empty > 0)
+			{
+				currRank += empty;
+				empty = 0;
+			}
+
+			ranks.push(currRank);
+		}
+
+		return ranks.join('/');
+	};
+
 	Board.setFEN = function(fen)
 	{
+		this.resetCaches();
 		var parts = fen.split(' ');
 
 		// setup the pieces
@@ -587,6 +651,71 @@ var BoardFactory;
 		var kingSquare = this.findPiece('K')[0];
 		return (this.isSquareAttacked(kingSquare)
 				&& this.getValidMovesForSquare(kingSquare).length == 0);
+	};
+
+	Board.getWhiteStaticValue = function()
+	{
+		this.determineStaticValues();
+		return this.whiteStaticValue;
+		
+	};
+
+	Board.getBlackStaticValue = function()
+	{
+		this.determineStaticValues();
+		return this.blackStaticValue;
+	};
+
+	Board.determineStaticValues = function()
+	{
+		// already done this?
+		if(this.whiteStaticValue > 0
+			|| this.blackStaticValue > 0)
+			return;
+
+		this.whiteStaticValue = 0;
+		this.blackStaticValue = 0;
+		var curr;
+
+		for(var f = 1; f < 9; f++)
+		{
+			for(var r = 1; r < 9; r++)
+			{
+				if(!this.squares[f][r].hasPiece())
+					continue;
+
+				switch(this.squares[f][r].getPiece())
+				{
+					case 'Q':
+					case 'q':
+						curr = 9;
+					break;
+					case 'R':
+					case 'r':
+						curr = 5;
+					break;
+					case 'B':
+					case 'b':
+						curr = 3;
+					break;
+					case 'N':
+					case 'n':
+						curr = 3;
+					break;
+					case 'P':
+					case 'p':
+						curr = 1;
+					break;
+					default:
+						continue;
+				}
+
+				if(PieceMap.isWhite(this.squares[f][r].getPiece()))
+					this.whiteStaticValue += curr;
+				else
+					this.blackStaticValue += curr;
+			}
+		}
 	};
 
 

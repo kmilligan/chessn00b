@@ -10,6 +10,7 @@ $.getScript('../board.js', function()
 	test("SquareAttacked", testIsSquareAttacked);
 	test("InCheck", testInCheck);
 	test("InCheckmate", testInCheckmate);
+	test("StaticPieceValue", testStaticPieceValue);
 });
 
 var testCreateBoard = function()
@@ -36,6 +37,8 @@ var testFEN = function()
 	equal(board.getSquare(4,1).getPiece(), 'Q');
 	equal(board.getSquare(4,8).getPiece(), 'q');
 	ok(board.isWhiteToMove());
+
+	equal(board.getPositionFEN(), 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
 };
 
 var testSimpleCoverage = function()
@@ -191,4 +194,22 @@ var testInCheckmate = function()
 	board.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - 0 1');	
 	ok(!board.blackInCheckmate());	
 	ok(!board.whiteInCheckmate());	
+
+	board.setFEN('8/8/8/8/8/1k6/1q6/1K6 w - 0 1');	
+	ok(board.whiteInCheckmate());	
+
+	// this one is trickier because a1 is not *currently* covered
+	// but *would be* if the King wanted to go there.
+	board.setFEN('8/8/8/8/1k6/2q5/PK6/1R6 w - 0 1');	
+	equal(board.getValidMovesForSquare(2,2).length, 0);
+	console.log(board.getValidMovesForSquare(2,2));
+	ok(board.whiteInCheckmate());	
+};
+
+var testStaticPieceValue = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('rnbqk3/8/8/8/8/8/PPPPP3/RNBQK3 w - 0 1');	
+	equal(board.getWhiteStaticValue(), 25);	
+	equal(board.getBlackStaticValue(), 20);	
 };
