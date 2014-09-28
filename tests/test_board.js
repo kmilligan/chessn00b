@@ -6,11 +6,13 @@ $.getScript('../board.js', function()
 	test("SimpleCoverage", testSimpleCoverage);
 	test("LessSimpleCoverage", testLessSimpleCoverage);
 	test("SimpleValidMoves", testSimpleValidMoves);
+	test("ComplexValidMoves", testComplexValidMoves);
 	test("FindPiece", testFindPiece);
 	test("SquareAttacked", testIsSquareAttacked);
 	test("InCheck", testInCheck);
 	test("InCheckmate", testInCheckmate);
 	test("StaticPieceValue", testStaticPieceValue);
+	test("SimpleMove", testSimpleMove);
 });
 
 var testCreateBoard = function()
@@ -24,6 +26,12 @@ var testCreateBoard = function()
 	// a1, h8 are black
 	ok(!board.getSquare(1,1).isWhite());
 	ok(!board.getSquare(8,8).isWhite());
+
+	// try using algebraic
+	ok(board.getSquare('a8').isWhite());
+	ok(board.getSquare('h1').isWhite());
+	ok(!board.getSquare('a1').isWhite());
+	ok(!board.getSquare('h8').isWhite());
 };
 
 var testFEN = function()
@@ -140,6 +148,16 @@ var testSimpleValidMoves = function()
 	equal(board.getValidMovesForSquare(2,2).length, 4);
 };
 
+var testComplexValidMoves = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('8/8/8/8/8/1P6/P7/8 w - 0 1');	
+
+	// pawns can move two on first move!
+	equal(board.getValidMovesForSquare(2,3).length, 1);
+	equal(board.getValidMovesForSquare(1,2).length, 2);
+};
+
 var testFindPiece = function()
 {
 	var board = BoardFactory.create();
@@ -211,4 +229,16 @@ var testStaticPieceValue = function()
 	board.setFEN('rnbqk3/8/8/8/8/8/PPPPP3/RNBQK3 w - 0 1');	
 	equal(board.getWhiteStaticValue(), 25);	
 	equal(board.getBlackStaticValue(), 20);	
+};
+
+var testSimpleMove = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+	ok(board.move('e2e4'));
+	equal(board.getPositionFEN(), 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR');
+
+	board.setFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+	ok(board.moves('e2e4 c7c5 g1f3'));
+	equal(board.getPositionFEN(), 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R');
 };

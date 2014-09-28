@@ -31,6 +31,7 @@ var BoardFactory;
 	};
 
 	// Map file numbers to letter names
+	// and vice versa
 	var FileMap =
 	{
 		'1': 'a',
@@ -40,7 +41,15 @@ var BoardFactory;
 		'5': 'e',
 		'6': 'f',
 		'7': 'g',
-		'8': 'h'
+		'8': 'h',
+		'a': '1',
+		'b': '2',
+		'c': '3',
+		'd': '4',
+		'e': '5',
+		'f': '6',
+		'g': '7',
+		'h': '8'
 	};
 
 	/**
@@ -150,6 +159,14 @@ var BoardFactory;
 
 	Board.getSquare = function(file, rank)
 	{
+		// might have given us algebraic
+		if(typeof rank == 'undefined'
+			&& typeof file == 'string')
+		{
+			rank = file.substr(1,1);
+			file = FileMap[file.substr(0,1)];
+		}
+
 		return this.squares[file][rank];
 	};
 
@@ -185,6 +202,7 @@ var BoardFactory;
 		var piece = square.getPiece();
 		var isWhite = PieceMap.isWhite(piece);
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
+		var isPawn = (piece == 'p' || piece == 'P')?true:false;
 
 		if(isKing)
 		{
@@ -206,6 +224,13 @@ var BoardFactory;
 				&& PieceMap.isWhite(possible[i].getPiece()) == isWhite)
 				continue;
 
+			// pawn can only move to a covered if an opposing piece is there
+			if(isPawn)
+			{
+				if(!possible[i].hasPiece())
+					continue;
+			}
+
 			// king can't move into check
 			if(isKing)
 			{
@@ -222,7 +247,50 @@ var BoardFactory;
 			result.push(possible[i]);
 		}
 
+		// for pawns, we may also be able to move directly ahead...
+		// just not if there are pieces there.
+		if(isPawn)
+		{
+			if(isWhite)
+			{
+				if(	square.rank < 8 &&
+					!this.squares[square.file][square.rank + 1].hasPiece())
+				{
+					result.push(this.squares[square.file][square.rank + 1]);
+
+					if(square.rank == 2 &&
+						!this.squares[square.file][square.rank + 2].hasPiece())
+						result.push(this.squares[square.file][square.rank + 2]);
+				}
+			}
+			else
+			{
+				if(	square.rank > 1 &&
+					!this.squares[square.file][square.rank - 1].hasPiece())
+				{
+					result.push(this.squares[square.file][square.rank - 1]);
+
+					if(square.rank == 7 &&
+						!this.squares[square.file][square.rank - 2].hasPiece())
+						result.push(this.squares[square.file][square.rank - 2]);
+				}
+			}
+		}
+
 		return result;
+	};
+
+	// expecting square objects
+	Board.isValidMove = function(start, end)
+	{
+		var valids = this.getValidMovesForSquare(start);
+		for(var i = 0; i < valids.length; i++)
+		{
+			if(valids[i] === end)
+				return true;
+		};
+
+		return false;
 	};
 
 	Board.determineCoveredSquares = function()
@@ -415,6 +483,7 @@ var BoardFactory;
 	Board.getKnightOptions = function(file,rank)
 	{
 		var options = [];
+		// check to the left...
 		if(file - 1 > 0)
 		{
 			if(rank + 2 < 9)
@@ -428,11 +497,12 @@ var BoardFactory;
 				if(rank + 1 < 9)
 					options.push(this.squares[file - 2][rank + 1]);
 
-				if(rank - 1 < 9)
+				if(rank - 1 > 0)
 					options.push(this.squares[file - 2][rank - 1]);
 			}
 		}
 
+		// ...now to the right
 		if(file + 1 < 9)
 		{
 			if(rank + 2 < 9)
@@ -446,7 +516,7 @@ var BoardFactory;
 				if(rank + 1 < 9)
 					options.push(this.squares[file + 2][rank + 1]);
 
-				if(rank - 1 < 9)
+				if(rank - 1 > 0)
 					options.push(this.squares[file + 2][rank - 1]);
 			}
 		}
@@ -662,6 +732,59 @@ var BoardFactory;
 		var kingSquare = this.findPiece('K')[0];
 		return (this.isSquareAttacked(kingSquare)
 				&& this.getValidMovesForSquare(kingSquare).length == 0);
+	};
+
+	Board.moves = function(moves)
+	{
+		if(typeof moves == 'string')
+			moves = moves.split(' ');
+
+		for(var i = 0; i < moves.length; i++)
+		{
+			if(!this.move(moves[i]))
+				return false;
+		}
+
+		return true;
+	};
+
+	// expected: long algegraic; i.e. "e2e4"
+	// returns boolean if move was executed successfully
+	Board.move = function(notation)
+	{
+		var start = notation.substr(0,2);
+		var end = notation.substr(2,2);
+		// if there's anything left, it's a promotion
+		var promotion = '';
+		if(notation.length > 4)
+			promotion = notation.substr(4,1);
+
+		var startSquare = this.getSquare(start);
+
+		// can only move if we have something to move!
+		if(!startSquare || !startSquare.hasPiece())
+			return false;
+
+		var endSquare = this.getSquare(end);
+
+		// valid move?
+		// not clear we should be checking this here...
+		// like maybe should have been done before hand?
+		if(!this.isValidMove(startSquare, endSquare))
+		{
+			// exception?
+			return false;
+		}
+
+		// actually move the piece
+		var piece = startSquare.getPiece();
+		startSquare.removePiece();
+		endSquare.setPiece(piece);
+
+		// our caches are no longer valid
+		this.resetCaches();
+
+		return true;
 	};
 
 	Board.getWhiteStaticValue = function()
