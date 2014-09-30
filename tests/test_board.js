@@ -12,6 +12,7 @@ $.getScript('../board.js', function()
 	test("InCheck", testInCheck);
 	test("InCheckmate", testInCheckmate);
 	test("StaticPieceValue", testStaticPieceValue);
+	test("DynamicPieceValue", testDynamicPieceValue);
 	test("SimpleMove", testSimpleMove);
 });
 
@@ -227,8 +228,16 @@ var testStaticPieceValue = function()
 {
 	var board = BoardFactory.create();
 	board.setFEN('rnbqk3/8/8/8/8/8/PPPPP3/RNBQK3 w - 0 1');	
-	equal(board.getWhiteStaticValue(), 25);	
-	equal(board.getBlackStaticValue(), 20);	
+	equal(board.getWhiteStaticValue(), 250);	
+	equal(board.getBlackStaticValue(), 200);	
+};
+
+var testDynamicPieceValue = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('2b1kb2/8/8/8/8/8/8/3QK3 w - 0 1');	
+	equal(board.getWhiteDynamicValue(), 23);	
+	equal(board.getBlackDynamicValue(), 29);	
 };
 
 var testSimpleMove = function()

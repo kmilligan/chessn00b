@@ -140,6 +140,8 @@ var BoardFactory;
 		this.blackCoveredSquares = [];
 		this.whiteStaticValue = 0;
 		this.blackStaticValue = 0;
+		this.whiteDynamicValue = 0;
+		this.blackDynamicValue = 0;
 	};
 
 	Board.setPiece = function(piece, file, rank)
@@ -844,6 +846,9 @@ var BoardFactory;
 						continue;
 				}
 
+				// give us more room for dynamic values
+				curr *= 10;
+
 				if(PieceMap.isWhite(this.squares[f][r].getPiece()))
 					this.whiteStaticValue += curr;
 				else
@@ -852,6 +857,44 @@ var BoardFactory;
 		}
 	};
 
+	Board.getWhiteDynamicValue = function()
+	{
+		this.determineDynamicValues();
+		return this.whiteDynamicValue;
+	};
+
+	Board.getBlackDynamicValue = function()
+	{
+		this.determineDynamicValues();
+		return this.blackDynamicValue;
+	};
+
+	// based on position
+	Board.determineDynamicValues = function()
+	{
+		// already done this?
+		if(this.whiteDynamicValue > 0
+			|| this.blackDynamicValue > 0)
+			return;
+
+		this.whiteDynamicValue = 0;
+		this.blackDynamicValue = 0;
+
+		// do we have both bishops?
+		if(this.findPiece('b').length >= 2)
+			this.blackDynamicValue += 10;
+
+		if(this.findPiece('B').length >= 2)
+			this.whiteDynamicValue += 10;
+
+		// how much space to our pieces have?
+		var divisor = 1;
+		var covers = this.getBlacksCoveredSquares();
+		this.blackDynamicValue += Math.round(covers.length / divisor);
+
+		var covers = this.getWhitesCoveredSquares();
+		this.whiteDynamicValue += Math.round(covers.length / divisor);
+	};
 
 	Board.dump = function()
 	{
