@@ -157,6 +157,11 @@ var testComplexValidMoves = function()
 	// pawns can move two on first move!
 	equal(board.getValidMovesForSquare(2,3).length, 1);
 	equal(board.getValidMovesForSquare(1,2).length, 2);
+
+	// piece can't move if it would put king in check!
+	board.setFEN('8/8/8/8/p7/1r6/1Q6/1K6 w - 0 1');
+	// ...but can still take rook, even tho protected!
+	equal(board.getValidMovesForSquare(2,2).length, 1);
 };
 
 var testFindPiece = function()

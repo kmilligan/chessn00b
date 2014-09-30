@@ -206,14 +206,8 @@ var BoardFactory;
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
 		var isPawn = (piece == 'p' || piece == 'P')?true:false;
 
-		if(isKing)
-		{
-			// need a "no king" version of the board
-			// to look for x-rays
-			var noKingBoard = BoardFactory.create();
-			noKingBoard.setFEN(this.getPositionFEN().replace(/[kK]/g,'1'));
-		}
-
+		var currFEN = this.getPositionFEN();
+		var postMoveBoard = BoardFactory.create();
 		var possible = this.getCoveredSquares(square);
 
 		if(possible.length == 0)
@@ -233,18 +227,13 @@ var BoardFactory;
 					continue;
 			}
 
-			// king can't move into check
-			if(isKing)
-			{
-				if((isWhite && this.isSquareAttackedByBlack(possible[i]))
-					|| (!isWhite && this.isSquareAttackedByWhite(possible[i])))
-					continue;
-
-				// also have to test if squares *would be* in check.
-				if((isWhite && noKingBoard.isSquareAttackedByBlack(possible[i].file, possible[i].rank))
-					|| (!isWhite && noKingBoard.isSquareAttackedByWhite(possible[i].file, possible[i].rank)))
-					continue;
-			}
+			// can't make any move if it would cause check
+			postMoveBoard.setFEN(currFEN);
+			var notation = '' + square.name + possible[i].name;
+			postMoveBoard.move(notation, true);
+			if((isWhite && postMoveBoard.whiteInCheck())
+				|| (!isWhite && postMoveBoard.blackInCheck()))
+				continue;
 
 			result.push(possible[i]);
 		}
@@ -752,8 +741,9 @@ var BoardFactory;
 
 	// expected: long algegraic; i.e. "e2e4"
 	// returns boolean if move was executed successfully
-	Board.move = function(notation)
+	Board.move = function(notation, skipValidCheck)
 	{
+		var skipValidCheck = skipValidCheck === true?true:false;
 		var start = notation.substr(0,2);
 		var end = notation.substr(2,2);
 		// if there's anything left, it's a promotion
@@ -772,7 +762,8 @@ var BoardFactory;
 		// valid move?
 		// not clear we should be checking this here...
 		// like maybe should have been done before hand?
-		if(!this.isValidMove(startSquare, endSquare))
+		if(	!skipValidCheck &&
+			!this.isValidMove(startSquare, endSquare))
 		{
 			// exception?
 			return false;
