@@ -15,6 +15,7 @@ $.getScript('../board.js', function()
 	test("DynamicPieceValue", testDynamicPieceValue);
 	test("SimpleMove", testSimpleMove);
 	test("SimpleBestMove", testSimpleBestMove);
+	test("2PlyBestMove", test2PlyBestMove);
 });
 
 var testCreateBoard = function()
@@ -269,4 +270,14 @@ var testSimpleBestMove = function()
 	
 	board.setFEN('8/6p1/q5R1/8/8/8/8/8 w - 0 1');
 	equal(board.getBestMoveForWhite(), 'g6a6');
+};
+
+var test2PlyBestMove = function()
+{
+	var board = BoardFactory.create();
+	// have a choice...take the queen (and lose next turn)
+	// or take the bishop
+	board.setFEN('8/p7/1q/1R5b/8/8/8/8 w - 0 1');
+	equal(board.getBestMoveForWhite(), 'b5h5');
+
 };
