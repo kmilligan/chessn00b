@@ -703,26 +703,40 @@ var BoardFactory;
 
 	Board.blackInCheck = function()
 	{
-		return this.isSquareAttacked(this.findPiece('k')[0]);
+		var king = this.findPiece('k');
+		if(king.length == 0)
+			return false;
+
+		return this.isSquareAttacked(king[0]);
 	};
 
 	Board.whiteInCheck = function()
 	{
-		return this.isSquareAttacked(this.findPiece('K')[0]);
+		var king = this.findPiece('K');
+		if(king.length == 0)
+			return false;
+
+		return this.isSquareAttacked(king[0]);
 	};
 
 	Board.blackInCheckmate = function()
 	{
-		var kingSquare = this.findPiece('k')[0];
-		return (this.isSquareAttacked(kingSquare)
-				&& this.getValidMovesForSquare(kingSquare).length == 0);
+		var king = this.findPiece('k');
+		if(king.length == 0)
+			return false;
+
+		return (this.isSquareAttacked(king[0])
+				&& this.getValidMovesForSquare(king[0]).length == 0);
 	};
 
 	Board.whiteInCheckmate = function()
 	{
-		var kingSquare = this.findPiece('K')[0];
-		return (this.isSquareAttacked(kingSquare)
-				&& this.getValidMovesForSquare(kingSquare).length == 0);
+		var king = this.findPiece('K');
+		if(king.length == 0)
+			return false;
+
+		return (this.isSquareAttacked(king[0])
+				&& this.getValidMovesForSquare(king[0]).length == 0);
 	};
 
 	Board.moves = function(moves)
@@ -913,7 +927,8 @@ var BoardFactory;
 				for(var i = 0; i < moves.length; i++)
 				{
 					var move = '' + this.squares[f][r].name + moves[i].name;
-
+					
+					// found checkmate. all done.
 					if(Math.abs(this.evaluateMove(move)) == 1000)
 						return move;
 				}
