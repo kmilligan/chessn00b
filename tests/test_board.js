@@ -262,6 +262,11 @@ var testSimpleBestMove = function()
 {
 	var board = BoardFactory.create();
 	board.setFEN('5q2/6r1/8/8/8/8/7K/8 b - 0 1');
-	board.dump();
 	equal(board.getBestMoveForBlack(), 'f8h8');
+
+	board.setFEN('q7/5p2/6R1/8/8/8/8/8 b - 0 1');
+	equal(board.getBestMoveForBlack(), 'f7g6');
+	
+	board.setFEN('8/6p1/q5R1/8/8/8/8/8 w - 0 1');
+	equal(board.getBestMoveForWhite(), 'g6a6');
 };

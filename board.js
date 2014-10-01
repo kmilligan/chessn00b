@@ -142,6 +142,7 @@ var BoardFactory;
 		this.blackStaticValue = 0;
 		this.whiteDynamicValue = 0;
 		this.blackDynamicValue = 0;
+		this.cachedPositionFEN = null;
 	};
 
 	Board.setPiece = function(piece, file, rank)
@@ -623,6 +624,9 @@ var BoardFactory;
 
 	Board.getPositionFEN = function()
 	{
+		if(this.cachedPositionFEN)
+			return this.cachedPositionFEN;
+
 		var ranks = [];
 		for(var r = 8; r > 0; r--)
 		{
@@ -654,7 +658,8 @@ var BoardFactory;
 			ranks.push(currRank);
 		}
 
-		return ranks.join('/');
+		this.cachedPositionFEN = ranks.join('/');
+		return this.cachedPositionFEN;
 	};
 
 	Board.setFEN = function(fen)
@@ -901,6 +906,11 @@ var BoardFactory;
 		this.whiteDynamicValue += Math.round(covers.length / divisor);
 	};
 
+	Board.getBestMoveForWhite = function()
+	{
+		return this.getBestMove(true);
+	};
+	
 	Board.getBestMoveForBlack = function()
 	{
 		return this.getBestMove(false);
@@ -926,28 +936,73 @@ var BoardFactory;
 
 				for(var i = 0; i < moves.length; i++)
 				{
-					var move = '' + this.squares[f][r].name + moves[i].name;
+					var notation = '' + this.squares[f][r].name + moves[i].name;
 					
 					// found checkmate. all done.
-					if(Math.abs(this.evaluateMove(move)) == 1000)
-						return move;
+					var val = this.evaluateMove(notation);
+					if(Math.abs(val) == 1000)
+						return notation;
+
+					// otherwise, keep track and we'll sort it later.
+					moveValues.push({ move: notation, value: val });
 				}
 			}
 		}
 
-		return '';
+		// which direction depends on which side we're looking at
+		var sorter = function(a,b)
+		{
+			return a.value - b.value;
+		};
+
+		if(forWhite)
+		{
+			var sorter = function(a,b)
+			{
+				return b.value - a.value;
+			};
+		}
+
+		moveValues.sort(sorter);
+
+		if(this.mark)
+		{
+			for(var i = 0; i < moveValues.length; i++)
+				console.log(moveValues[i].move + ': ' + moveValues[i].value);
+		}
+
+		return moveValues[0].move;
 	};
 
-	Board.evaluateMove = function(move)
+	Board.evaluateMove = function(notation)
 	{
 		var board = BoardFactory.create();
+		board.mark = true;
 		board.setFEN(this.getPositionFEN());
-		board.move(move);
+		board.move(notation);
 		if(board.whiteInCheckmate())
 			return -1000;
 		else if(board.blackInCheckmate())
 			return 1000;
+
+		var value = 0;
+
+		value += board.getWhiteStaticValue();
+		value -= board.getBlackStaticValue();
+		value += board.getWhiteDynamicValue();
+		value -= board.getBlackDynamicValue();
+	
+		/*
+		console.log(notation + ': ' + value);
+		console.log(board.getWhiteStaticValue() + ',' +
+					board.getBlackStaticValue() + ',' +
+					board.getWhiteDynamicValue() + ',' +
+					board.getBlackDynamicValue());
+		board.dump();
+		*/
+		return value;
 	};
+
 	Board.dump = function()
 	{
 		var divider = '-----------------';
