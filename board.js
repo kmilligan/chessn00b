@@ -887,6 +887,52 @@ var BoardFactory;
 		this.whiteDynamicValue += Math.round(covers.length / divisor);
 	};
 
+	Board.getBestMoveForBlack = function()
+	{
+		return this.getBestMove(false);
+	};
+	
+	Board.getBestMove = function(forWhite)
+	{
+		var moveValues = [];
+		for(var f = 1; f < 9; f++)
+		{
+			for(var r = 1; r < 9; r++)
+			{
+				if(!this.squares[f][r].hasPiece())
+					continue;
+
+				if(PieceMap.isWhite(this.squares[f][r].getPiece()) != forWhite)
+					continue;
+
+				var moves = this.getValidMovesForSquare(f,r);
+
+				if(moves.length == 0)
+					continue;
+
+				for(var i = 0; i < moves.length; i++)
+				{
+					var move = '' + this.squares[f][r].name + moves[i].name;
+
+					if(Math.abs(this.evaluateMove(move)) == 1000)
+						return move;
+				}
+			}
+		}
+
+		return '';
+	};
+
+	Board.evaluateMove = function(move)
+	{
+		var board = BoardFactory.create();
+		board.setFEN(this.getPositionFEN());
+		board.move(move);
+		if(board.whiteInCheckmate())
+			return -1000;
+		else if(board.blackInCheckmate())
+			return 1000;
+	};
 	Board.dump = function()
 	{
 		var divider = '-----------------';

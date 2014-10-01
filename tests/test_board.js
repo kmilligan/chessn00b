@@ -14,6 +14,7 @@ $.getScript('../board.js', function()
 	test("StaticPieceValue", testStaticPieceValue);
 	test("DynamicPieceValue", testDynamicPieceValue);
 	test("SimpleMove", testSimpleMove);
+	test("SimpleBestMove", testSimpleBestMove);
 });
 
 var testCreateBoard = function()
@@ -255,4 +256,12 @@ var testSimpleMove = function()
 	board.setFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 	ok(board.moves('e2e4 c7c5 g1f3'));
 	equal(board.getPositionFEN(), 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R');
+};
+
+var testSimpleBestMove = function()
+{
+	var board = BoardFactory.create();
+	board.setFEN('5q2/6r1/8/8/8/8/7K/8 b - 0 1');
+	board.dump();
+	equal(board.getBestMoveForBlack(), 'f8h8');
 };
