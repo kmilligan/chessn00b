@@ -965,7 +965,7 @@ var BoardFactory;
 		return this.getBestMove(false);
 	};
 	
-	Board.getBestMove = function(forWhite)
+	Board.getBestMoveSimple = function(forWhite)
 	{
 		var moveValues = [];
 		for(var f = 1; f < 9; f++)
@@ -1029,31 +1029,55 @@ var BoardFactory;
 		board.setFEN(this.getPositionFEN());
 		return board;
 	};
+	
+	var abExamined;
+	Board.getBestMove = function(forWhite)
+	{
+		this.lastBestMove = '';
+		abExamined = 0;
+		this.alphabeta(3, -10000, 10000, forWhite);
+		this.dump();
+		console.log((forWhite?'white':'black') + ' to move; num examined: ' + abExamined + '; best: ' + this.lastBestMove);
+		return this.lastBestMove;
+	};
 
 	Board.alphabeta = function(depth, a, b, isWhite)
 	{
+		abExamined++;
+
 		if(depth == 0)
 		{
-			console.log('(bottom)');
 			var val = this.evaluatePosition();
-			console.log(val);
+			//console.log('leaf: ' + val);
 			return val;
 		}
 
 		var moves;
+		var curr;
 		if(isWhite)
 		{
 			moves = this.getValidMovesForWhite();
 			for(var i = 0; i < moves.length; i++)
 			{
 				var board = this.clone();
-				console.log(moves[i]);
 				board.move(moves[i]);
-				a = Math.max(a, board.alphabeta(depth - 1, a, b, !isWhite));
+				curr = a;
+
+				if(board.blackInCheckmate())
+				{
+					a = 1000;
+					this.lastBestMove = moves[i];
+					break;
+				}
+				else
+					a = Math.max(a, board.alphabeta(depth - 1, a, b, !isWhite));
+
+				if(curr != a)
+					this.lastBestMove = moves[i];
+				
 				if(b <= a)
 					break;
 			}
-			console.log(a);
 			return a;
 		}
 		else
@@ -1062,14 +1086,25 @@ var BoardFactory;
 			for(var i = 0; i < moves.length; i++)
 			{
 				var board = this.clone();
-				console.log(moves[i]);
 				board.move(moves[i]);
-				b = Math.min(b, board.alphabeta(depth - 1, a, b, !isWhite));
+				curr = b;
+
+				if(board.whiteInCheckmate())
+				{
+					b = -1000;
+					this.lastBestMove = moves[i];
+					break;
+				}
+				else
+					b = Math.min(b, board.alphabeta(depth - 1, a, b, !isWhite));
+
+				if(curr != b)
+					this.lastBestMove = moves[i];
+
 				if(b <= a)
 					break;
 			}
 
-			console.log(b);
 			return b;
 		}
 	};

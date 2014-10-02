@@ -279,6 +279,4 @@ var test2PlyBestMove = function()
 	// or take the bishop
 	board.setFEN('8/p7/1q/1R5b/8/8/8/8 w - 0 1');
 	equal(board.getBestMoveForWhite(), 'b5h5');
-	board.dump();
-	console.log(board.alphabeta(3, 1000, -1000, false));
 };
