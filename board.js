@@ -143,6 +143,8 @@ var BoardFactory;
 		this.whiteDynamicValue = 0;
 		this.blackDynamicValue = 0;
 		this.cachedPositionFEN = null;
+		this.validWhiteMoves = [];
+		this.validBlackMoves = [];
 	};
 
 	Board.setPiece = function(piece, file, rank)
@@ -188,6 +190,53 @@ var BoardFactory;
 	{
 		this.determineCoveredSquares();
 		return this.blackCoveredSquares;
+	};
+
+	Board.getValidMovesForWhite = function()
+	{
+		this.determineValidMoves();
+		return this.validWhiteMoves;
+	};
+
+	Board.getValidMovesForBlack = function()
+	{
+		this.determineValidMoves();
+		return this.validBlackMoves;
+	};
+
+	Board.determineValidMoves = function()
+	{
+		if(this.validWhiteMoves.length > 0
+			|| this.validBlackMoves.length > 0)
+			return;
+
+		this.validWhiteMoves = [];
+		this.validBlackMoves = [];
+		var curr, move;
+		var isWhite;
+		var moves;
+
+		for(var f = 1; f < 9; f++)
+		{
+			for(var r = 1; r < 9; r++)
+			{
+				if(!this.squares[f][r].hasPiece())
+					continue;
+
+				curr = this.squares[f][r].name;
+				isWhite = PieceMap.isWhite(this.squares[f][r].getPiece());
+
+				moves = this.getValidMovesForSquare(f,r);
+				for(var i = 0; i < moves.length; i++)
+				{
+					move = '' + curr + moves[i].name;
+					if(isWhite)
+						this.validWhiteMoves.push(move);
+					else
+						this.validBlackMoves.push(move);
+				}
+			}
+		}
 	};
 
 	Board.getValidMovesForSquare = function(fileOrSquare, rank)
@@ -974,31 +1023,87 @@ var BoardFactory;
 		return moveValues[0].move;
 	};
 
+	Board.clone = function()
+	{
+		var board = BoardFactory.create();
+		board.setFEN(this.getPositionFEN());
+		return board;
+	};
+
+	Board.alphabeta = function(depth, a, b, isWhite)
+	{
+		if(depth == 0)
+		{
+			console.log('(bottom)');
+			var val = this.evaluatePosition();
+			console.log(val);
+			return val;
+		}
+
+		var moves;
+		if(isWhite)
+		{
+			moves = this.getValidMovesForWhite();
+			for(var i = 0; i < moves.length; i++)
+			{
+				var board = this.clone();
+				console.log(moves[i]);
+				board.move(moves[i]);
+				a = Math.max(a, board.alphabeta(depth - 1, a, b, !isWhite));
+				if(b <= a)
+					break;
+			}
+			console.log(a);
+			return a;
+		}
+		else
+		{
+			moves = this.getValidMovesForBlack();
+			for(var i = 0; i < moves.length; i++)
+			{
+				var board = this.clone();
+				console.log(moves[i]);
+				board.move(moves[i]);
+				b = Math.min(b, board.alphabeta(depth - 1, a, b, !isWhite));
+				if(b <= a)
+					break;
+			}
+
+			console.log(b);
+			return b;
+		}
+	};
+
 	Board.evaluateMove = function(notation)
 	{
 		var board = BoardFactory.create();
 		board.mark = true;
 		board.setFEN(this.getPositionFEN());
 		board.move(notation);
-		if(board.whiteInCheckmate())
+		return board.evaluatePosition();
+	};
+
+	Board.evaluatePosition = function()
+	{
+		if(this.whiteInCheckmate())
 			return -1000;
-		else if(board.blackInCheckmate())
+		else if(this.blackInCheckmate())
 			return 1000;
 
 		var value = 0;
 
-		value += board.getWhiteStaticValue();
-		value -= board.getBlackStaticValue();
-		value += board.getWhiteDynamicValue();
-		value -= board.getBlackDynamicValue();
+		value += this.getWhiteStaticValue();
+		value -= this.getBlackStaticValue();
+		value += this.getWhiteDynamicValue();
+		value -= this.getBlackDynamicValue();
 	
 		/*
 		console.log(notation + ': ' + value);
-		console.log(board.getWhiteStaticValue() + ',' +
-					board.getBlackStaticValue() + ',' +
-					board.getWhiteDynamicValue() + ',' +
-					board.getBlackDynamicValue());
-		board.dump();
+		console.log(this.getWhiteStaticValue() + ',' +
+					this.getBlackStaticValue() + ',' +
+					this.getWhiteDynamicValue() + ',' +
+					this.getBlackDynamicValue());
+		this.dump();
 		*/
 		return value;
 	};
