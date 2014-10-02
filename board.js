@@ -1027,6 +1027,10 @@ var BoardFactory;
 	{
 		var board = BoardFactory.create();
 		board.setFEN(this.getPositionFEN());
+		// doesn't seem to work, not sure why
+		//var board = jQuery.extend(true, {}, this);
+		// doesn't work for complex objects
+		//var board = JSON.parse(JSON.stringify(this));
 		return board;
 	};
 	

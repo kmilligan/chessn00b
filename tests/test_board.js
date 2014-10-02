@@ -16,6 +16,7 @@ $.getScript('../board.js', function()
 	test("SimpleMove", testSimpleMove);
 	test("SimpleBestMove", testSimpleBestMove);
 	test("2PlyBestMove", test2PlyBestMove);
+	test("Clone", testClone);
 });
 
 var testCreateBoard = function()
@@ -279,4 +280,24 @@ var test2PlyBestMove = function()
 	// or take the bishop
 	board.setFEN('8/p7/1q/1R5b/8/8/8/8 w - 0 1');
 	equal(board.getBestMoveForWhite(), 'b5h5');
+};
+
+var testClone = function()
+{
+	// let see how slow clone is.
+	var board = BoardFactory.create();
+	var fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+	board.setFEN(fen);
+
+	var numCopies = 2000;
+	var start = new Date().getTime();
+	for(var i = 0; i < numCopies; i++)
+		var clone = board.clone();
+
+	var end = new Date().getTime();
+
+	console.log((end - start) + 'ms makin ' + numCopies + ' copies');
+	ok(true);
+
+	// maybe it's getMoves?
 };
