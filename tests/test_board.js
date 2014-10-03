@@ -16,7 +16,7 @@ $.getScript('../board.js', function()
 	test("SimpleMove", testSimpleMove);
 	test("SimpleBestMove", testSimpleBestMove);
 	test("2PlyBestMove", test2PlyBestMove);
-	test("Clone", testClone);
+	test("Timing", testTiming);
 });
 
 var testCreateBoard = function()
@@ -282,22 +282,34 @@ var test2PlyBestMove = function()
 	equal(board.getBestMoveForWhite(), 'b5h5');
 };
 
-var testClone = function()
+var testTiming = function()
 {
 	// let see how slow clone is.
 	var board = BoardFactory.create();
 	var fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 	board.setFEN(fen);
 
+	var clone;
 	var numCopies = 2000;
 	var start = new Date().getTime();
 	for(var i = 0; i < numCopies; i++)
-		var clone = board.clone();
+		clone = board.clone();
 
 	var end = new Date().getTime();
 
 	console.log((end - start) + 'ms makin ' + numCopies + ' copies');
 	ok(true);
 
-	// maybe it's getMoves?
+	// maybe it's determineValid?
+	var start = new Date().getTime();
+	for(var i = 0; i < numCopies; i++)
+	{
+		clone.determineValidMoves(true);
+		clone.resetCaches();
+	}
+
+	var end = new Date().getTime();
+
+	console.log((end - start) + 'ms makin ' + numCopies + ' determineValidMoves');
+	ok(true);
 };

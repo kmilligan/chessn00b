@@ -182,36 +182,41 @@ var BoardFactory;
 
 	Board.getWhitesCoveredSquares = function()
 	{
-		this.determineCoveredSquares();
+		this.determineCoveredSquares(true);
 		return this.whiteCoveredSquares;
 	};
 
 	Board.getBlacksCoveredSquares = function()
 	{
-		this.determineCoveredSquares();
+		this.determineCoveredSquares(false);
 		return this.blackCoveredSquares;
 	};
 
 	Board.getValidMovesForWhite = function()
 	{
-		this.determineValidMoves();
+		this.determineValidMoves(true);
 		return this.validWhiteMoves;
 	};
 
 	Board.getValidMovesForBlack = function()
 	{
-		this.determineValidMoves();
+		this.determineValidMoves(false);
 		return this.validBlackMoves;
 	};
 
-	Board.determineValidMoves = function()
+	Board.determineValidMoves = function(forWhite)
 	{
-		if(this.validWhiteMoves.length > 0
-			|| this.validBlackMoves.length > 0)
+		// already done this?
+		if((forWhite && this.validWhiteMoves.length > 0)
+			|| (!forWhite && this.validBlackMoves.length > 0))
 			return;
 
-		this.validWhiteMoves = [];
-		this.validBlackMoves = [];
+		if(forWhite)
+			this.validWhiteMoves = [];
+
+		if(!forWhite)
+			this.validBlackMoves = [];
+
 		var curr, move;
 		var isWhite;
 		var moves;
@@ -225,6 +230,9 @@ var BoardFactory;
 
 				curr = this.squares[f][r].name;
 				isWhite = PieceMap.isWhite(this.squares[f][r].getPiece());
+
+				if(isWhite != forWhite)
+					continue;
 
 				moves = this.getValidMovesForSquare(f,r);
 				for(var i = 0; i < moves.length; i++)
@@ -334,15 +342,18 @@ var BoardFactory;
 		return false;
 	};
 
-	Board.determineCoveredSquares = function()
+	Board.determineCoveredSquares = function(forWhite)
 	{
 		// already figured this out?
-		if( this.whiteCoveredSquares.length > 0
-			|| this.blackCoveredSquares.legnth > 0 )
+		if( (forWhite && this.whiteCoveredSquares.length > 0 )
+			|| (!forWhite && this.blackCoveredSquares.legnth > 0 ))
 			return;
 
-		this.whiteCoveredSquares = [];
-		this.blackCoveredSquares = [];
+		if(forWhite)
+			this.whiteCoveredSquares = [];
+	
+		if(!forWhite)
+			this.blackCoveredSquares = [];
 
 		// loop all the squares, finding the ones with pieces
 		// for each piece, determine coverage
@@ -353,12 +364,17 @@ var BoardFactory;
 			{
 				if(!this.squares[f][r].hasPiece())
 					continue;
+	
+				var isWhite = PieceMap.isWhite(this.squares[f][r].getPiece());
+
+				if(isWhite != forWhite)
+					continue;
 
 				covered = this.getCoveredSquares(f,r);
 
 				// push onto the appropriate color array
 				var arr = this.blackCoveredSquares;
-				if(PieceMap.isWhite(this.squares[f][r].getPiece()))
+				if(isWhite)
 					arr = this.whiteCoveredSquares;
 
 				for(var i = 0; i < covered.length; i++)
@@ -1023,8 +1039,16 @@ var BoardFactory;
 		return moveValues[0].move;
 	};
 
+	Board.evaluateMove = function(notation)
+	{
+		var board = this.clone();
+		board.move(notation);
+		return board.evaluatePosition();
+	};
+
 	Board.clone = function()
 	{
+		// this isn't a true, separate clone...
 		var board = BoardFactory.create();
 		board.setFEN(this.getPositionFEN());
 		// doesn't seem to work, not sure why
@@ -1035,10 +1059,12 @@ var BoardFactory;
 	};
 	
 	var abExamined;
+	var fenEvals;
 	Board.getBestMove = function(forWhite)
 	{
 		this.lastBestMove = '';
 		abExamined = 0;
+		fenEvals = {};
 		this.alphabeta(3, -10000, 10000, forWhite);
 		this.dump();
 		console.log((forWhite?'white':'black') + ' to move; num examined: ' + abExamined + '; best: ' + this.lastBestMove);
@@ -1048,14 +1074,22 @@ var BoardFactory;
 	Board.alphabeta = function(depth, a, b, isWhite)
 	{
 		abExamined++;
+		var currFEN = this.getPositionFEN();
 
+		// test terminal conditions
 		if(depth == 0)
 		{
+			if(fenEvals[currFEN])
+				return fenEvals[currFEN];
+
 			var val = this.evaluatePosition();
+			fenEvals[currFEN] = val;
+
 			//console.log('leaf: ' + val);
 			return val;
 		}
 
+		var board = this.clone();
 		var moves;
 		var curr;
 		if(isWhite)
@@ -1063,7 +1097,7 @@ var BoardFactory;
 			moves = this.getValidMovesForWhite();
 			for(var i = 0; i < moves.length; i++)
 			{
-				var board = this.clone();
+				board.setFEN(currFEN);
 				board.move(moves[i]);
 				curr = a;
 
@@ -1089,7 +1123,7 @@ var BoardFactory;
 			moves = this.getValidMovesForBlack();
 			for(var i = 0; i < moves.length; i++)
 			{
-				var board = this.clone();
+				board.setFEN(currFEN);
 				board.move(moves[i]);
 				curr = b;
 
@@ -1111,15 +1145,6 @@ var BoardFactory;
 
 			return b;
 		}
-	};
-
-	Board.evaluateMove = function(notation)
-	{
-		var board = BoardFactory.create();
-		board.mark = true;
-		board.setFEN(this.getPositionFEN());
-		board.move(notation);
-		return board.evaluatePosition();
 	};
 
 	Board.evaluatePosition = function()
