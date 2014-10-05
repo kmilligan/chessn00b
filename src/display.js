@@ -89,7 +89,10 @@
 	{
 		this.element = element;
 		this.board = BoardFactory.create();
+		this.engine = EngineFactory.create(this.board);
+		this.lastClickedSquare;
 		this.displaySquares = [];
+		this.thinking = false;
 
 		// need to track our board uniquely
 		// for sizing purposes
@@ -132,6 +135,9 @@
 			this.element.append(rank);
 		}
 
+		// attach our status element
+		this.element.append('<div class="fenview-status"><span class="your-move">Your move</span><span class="thinking">Thinking...</span></div>');
+		this.element.find('.thinking').hide();
 		// need to set the height of our ranks automagically
 		// unless they told us not too.
 		this.autosetHeight();
@@ -141,6 +147,7 @@
 		this.element.on('click', '.fenview-square', function()
 		{
 			that.squareClicked($(this));
+			return false;
 		});
 	}
 
@@ -158,8 +165,9 @@
 		var rule = '.' + this.id +
 				' .fenview-square { font-size: ' 
 				+ Math.ceil(width * 0.82) 
-				+ 'px; ' + // no space before px!
-				' height: ' + width + 'px; }';
+				+ 'px; ' // no space before px!
+				+ ' height: ' + width + 'px; '
+				+ ' line-height: ' + width + 'px; }';
 		
 		// IE does it differently...
 		if(this.dynCSS.styleSheet)
@@ -170,7 +178,46 @@
 
 	DisplayBoard.squareClicked = function(square)
 	{
-		square[0].displaySquare.toggleLite();		
+		if(this.thinking)
+			return;
+
+		if(this.lastClickedSquare)
+		{
+			// uhh same square; just move on.
+			if(square[0] == this.lastClickedSquare)
+			{
+				this.lastClickedSquare.unlite();
+				this.lastClickedSquare = null;
+				return;
+			}
+
+			this.lastClickedSquare.displaySquare.unlite();
+
+			var move = '' + this.lastClickedSquare.displaySquare.square.name
+						+ square[0].displaySquare.square.name;
+
+			this.engine.move(move);
+			this.update();
+			this.lastClickedSquare = null;
+
+			this.thinking = true;
+			this.element.find('.your-move').hide();
+			this.element.find('.thinking').show();
+			var that = this;
+			setTimeout(function()
+			{
+				var engineMove = that.engine.getBestMoveForBlack();
+				that.engine.move(engineMove);
+				that.thinking = false;
+				that.element.find('.thinking').hide();
+				that.element.find('.your-move').show();
+				that.update();
+			}, 0);
+			return;
+		}
+
+		square[0].displaySquare.lite();
+		this.lastClickedSquare = square[0]; 
 	};
 
 	DisplayBoard.setFEN = function(fen)
