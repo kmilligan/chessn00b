@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type='text/javascript' src='jquery.min.js'></script>
+		<script type='text/javascript' src='qunit.js'></script>
+		<link href='qunit.css' rel='stylesheet' type='text/css'/>
+		
+		<script type='text/javascript' src='../src/board.js'></script>
+		<script type='text/javascript' src='../src/display.js'></script>
+		<link href='../src/display.css' rel='stylesheet' type='text/css'/>
+		<script type='text/javascript'>
+			$(document).ready(function()
+			{
+				$('#board1').fenview();
+			});
+		</script>
+	</head>
+	<body>
+		<div id='play-test' style='float: left;'>
+			<div id='board1' style='width: 400px;'></div>
+		</div>
+	</body>
+</html>

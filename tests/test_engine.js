@@ -1,9 +1,8 @@
 // tests for our engine (and engine, by extension)
-$.getScript('../board.js', function()
+$.getScript('../src/board.js', function()
 {
-	$.getScript('../engine.js', function()
+	$.getScript('../src/engine.js', function()
 	{
-		//$('#engine1').fenview();
 		test("CreateBoard", testCreateBoard);
 		test("FEN", testFEN);
 		test("SimpleCoverage", testSimpleCoverage);
@@ -19,7 +18,7 @@ $.getScript('../board.js', function()
 		test("SimpleMove", testSimpleMove);
 		test("SimpleBestMove", testSimpleBestMove);
 		test("2PlyBestMove", test2PlyBestMove);
-		test("Timing", testTiming);
+		//test("Timing", testTiming);
 	});
 });
 

@@ -4,6 +4,15 @@
 *@author Kurt Milligan
 */
 
+// have what we need?
+if(typeof BoardFactory === 'undefined')
+{
+	// because throwing doesn't always render??
+	if(console)
+		console.log('Missing the BoardFactory!');
+	throw new Error('Missing the BoardFactory!');
+}
+
 // access point
 var EngineFactory;
 
