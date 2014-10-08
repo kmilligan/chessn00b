@@ -15,7 +15,26 @@
 	*/
 	$.fn.fenview = function(options)
 	{
-		return this.each(function(options)
+		if(!options)
+			options = {};
+
+		if(typeof options == 'string'
+			&& this.length == 1
+			&& this[0].displayboard)
+		{
+			// just asking for something
+			// of course, this assumes there is only one atm...
+			switch(options)
+			{
+				case 'fen':
+					return this[0].displayboard.getFEN();
+					break;
+				default:
+					return 'unsupported option';
+			}
+		}
+
+		return this.each(function()
 		{
 			// already have one?
 			if(this.displayboard)
@@ -26,14 +45,21 @@
 			if(options.fen)
 				fen = options.fen;
 
+			options.element = $(this);
+
 			// create!
-			this.displayboard = Object.create(DisplayBoard).init($(this));
+			this.displayboard = Object.create(DisplayBoard).init(options);
 			this.displayboard.setFEN(fen);
 		});
 	};
 
 	// map pieces to unicode
 	var PieceMap = BoardFactory.getPieceMap();
+
+	var OpeningBook = 
+	{
+		
+	}
 
 	/**
 	* Object representing a specific, single square on the board.
@@ -85,11 +111,20 @@
 	* Object representing the display chess board itself
 	*/
 	var DisplayBoard = {};	
-	DisplayBoard.init = function(element)
+	DisplayBoard.init = function(options)
 	{
-		this.element = element;
+		// have what we need?
+		if(!options || !options.element)
+			throw new Error('Missing options; requires at least "element" to attach to.');
+
+		// defaults
+		if(typeof options.playGame === 'undefined')
+			options.playGame = true;
+
+		this.element = options.element;
 		this.board = BoardFactory.create();
 		this.engine = EngineFactory.create(this.board);
+		this.playGame = options.playGame;
 		this.lastClickedSquare;
 		this.displaySquares = [];
 		this.thinking = false;
@@ -200,19 +235,9 @@
 			this.update();
 			this.lastClickedSquare = null;
 
-			this.thinking = true;
-			this.element.find('.your-move').hide();
-			this.element.find('.thinking').show();
-			var that = this;
-			setTimeout(function()
-			{
-				var engineMove = that.engine.getBestMoveForBlack();
-				that.engine.move(engineMove);
-				that.thinking = false;
-				that.element.find('.thinking').hide();
-				that.element.find('.your-move').show();
-				that.update();
-			}, 0);
+			if(this.playGame)
+				this.autoMove();
+
 			return;
 		}
 
@@ -220,10 +245,32 @@
 		this.lastClickedSquare = square[0]; 
 	};
 
+	DisplayBoard.autoMove = function()
+	{
+		this.thinking = true;
+		this.element.find('.your-move').hide();
+		this.element.find('.thinking').show();
+		var that = this;
+		setTimeout(function()
+		{
+			var engineMove = that.engine.getBestMoveForBlack();
+			that.engine.move(engineMove);
+			that.thinking = false;
+			that.element.find('.thinking').hide();
+			that.element.find('.your-move').show();
+			that.update();
+		}, 0);
+	};
+
 	DisplayBoard.setFEN = function(fen)
 	{
 		this.board.setFEN(fen);
 		this.update();
+	};
+
+	DisplayBoard.getFEN = function()
+	{
+		return this.engine.getPositionFEN();
 	};
 
 	DisplayBoard.update = function()
