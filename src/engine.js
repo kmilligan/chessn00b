@@ -909,11 +909,20 @@ var EngineFactory;
 	Engine.getBestMove = function(forWhite)
 	{
 		this.lastBestMove = '';
+		this.lastValue = 0;
 		abExamined = 0;
 		fenEvals = {};
+		var start = new Date().getTime();
 		this.alphabeta(3, -10000, 10000, forWhite);
-		this.board.dump();
-		console.log((forWhite?'white':'black') + ' to move; num examined: ' + abExamined + '; best: ' + this.lastBestMove);
+		var end = new Date().getTime();
+		var diff = (end - start) / 1000;
+		//this.board.dump();
+		console.log(
+			(forWhite?'white':'black') + ' to move '
+			+';examined: ' + abExamined 
+			+ ' nodes in ' + diff + 's' 
+			+ '; best: ' + this.lastBestMove
+			+ ' (' + this.lastValue + ')');
 		return this.lastBestMove;
 	};
 
@@ -921,6 +930,7 @@ var EngineFactory;
 	{
 		abExamined++;
 		var currFEN = this.getPositionFEN();
+		var val;
 
 		// test terminal conditions
 		if(depth == 0)
@@ -928,7 +938,7 @@ var EngineFactory;
 			if(fenEvals[currFEN])
 				return fenEvals[currFEN];
 
-			var val = this.evaluatePosition();
+			val = this.evaluatePosition();
 			fenEvals[currFEN] = val;
 
 			//console.log('leaf: ' + val);
@@ -951,13 +961,20 @@ var EngineFactory;
 				{
 					a = 1000;
 					this.lastBestMove = moves[i];
+					this.lastValue = a;
 					break;
 				}
 				else
-					a = Math.max(a, board.alphabeta(depth - 1, a, b, !isWhite));
+				{
+					val = board.alphabeta(depth - 1, a, b, !isWhite);
+					a = Math.max(a, val);
+				}
 
 				if(curr != a)
+				{
 					this.lastBestMove = moves[i];
+					this.lastValue = val;
+				}
 				
 				if(b <= a)
 					break;
@@ -977,13 +994,20 @@ var EngineFactory;
 				{
 					b = -1000;
 					this.lastBestMove = moves[i];
+					this.lastValue = b;
 					break;
 				}
 				else
-					b = Math.min(b, board.alphabeta(depth - 1, a, b, !isWhite));
+				{
+					val = board.alphabeta(depth - 1, a, b, !isWhite);
+					b = Math.min(b, val);
+				}
 
 				if(curr != b)
+				{
 					this.lastBestMove = moves[i];
+					this.lastValue = b;
+				}
 
 				if(b <= a)
 					break;

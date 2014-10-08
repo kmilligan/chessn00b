@@ -58,7 +58,12 @@
 
 	var OpeningBook = 
 	{
-		
+		"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR": [ "e7e5" ],
+		"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR": [ "g8f6" ],
+		"rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR": [ "g8f6" ],
+		"rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R": [ "b8c6" ],
+		"rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR": [ "g7g6" ]
+
 	}
 
 	/**
@@ -231,7 +236,7 @@
 			// uhh same square; just move on.
 			if(square[0] == this.lastClickedSquare)
 			{
-				this.lastClickedSquare.unlite();
+				this.lastClickedSquare.displaySquare.unlite();
 				this.lastClickedSquare = null;
 				return;
 			}
@@ -270,8 +275,22 @@
 		var that = this;
 		setTimeout(function()
 		{
-			var engineMove = that.engine.getBestMoveForBlack();
-			that.engine.move(engineMove);
+			var myMove;
+			// check our opening book first
+			var book = OpeningBook[that.getFEN()];
+
+			if(book)
+			{
+				var which = Math.round(Math.random() * (book.length - 1));
+				myMove = book[which];
+				console.log("book move used");
+			}
+			else
+			{
+				myMove = that.engine.getBestMoveForBlack();
+			}
+
+			that.engine.move(myMove);
 			that.thinking = false;
 			that.element.find('.thinking').hide();
 			that.element.find('.your-move').show();
