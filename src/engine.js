@@ -203,9 +203,19 @@ var EngineFactory;
 		return result;
 	};
 
-	// expecting square objects
-	Engine.isValidMove = function(start, end)
+	// expecting square objects for start & end
+	// or a "move" notation
+	Engine.isValidMove = function(startOrMove, end)
 	{
+		var start;
+		if(typeof startOrMove == 'object')
+			start = startOrMove;
+		else
+		{
+			start = this.board.getSquare(startOrMove.substr(0,2));
+			end = this.board.getSquare(startOrMove.substr(2,2));
+		}
+
 		var valids = this.getValidMovesForSquare(start);
 		for(var i = 0; i < valids.length; i++)
 		{

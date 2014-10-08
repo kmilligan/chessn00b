@@ -26,3 +26,13 @@
 {
 	background-color: #29f;
 }
+
+.fenview-status
+{
+	font-family: sans-serif;
+}
+
+.illegal-move
+{
+	color: #c22f12;
+}

@@ -171,8 +171,16 @@
 		}
 
 		// attach our status element
-		this.element.append('<div class="fenview-status"><span class="your-move">Your move</span><span class="thinking">Thinking...</span></div>');
+		this.element.append('<div class="fenview-status">'
+			+ '<span class="illegal-move">Illegal move</span>'
+			+ '<span class="your-move">Your move</span>'
+			+ '<span class="thinking">Thinking...</span>'
+			+ '</div>');
+		this.element.find('.illegal-move').hide();
 		this.element.find('.thinking').hide();
+		if(!this.playGame)
+			this.element.find('.your-move').hide();
+
 		// need to set the height of our ranks automagically
 		// unless they told us not too.
 		this.autosetHeight();
@@ -216,6 +224,8 @@
 		if(this.thinking)
 			return;
 
+		this.element.find('.illegal-move').hide();
+
 		if(this.lastClickedSquare)
 		{
 			// uhh same square; just move on.
@@ -230,6 +240,13 @@
 
 			var move = '' + this.lastClickedSquare.displaySquare.square.name
 						+ square[0].displaySquare.square.name;
+
+			if(!this.engine.isValidMove(move))
+			{
+				this.element.find('.illegal-move').show();
+				this.lastClickedSquare = null;
+				return;
+			}
 
 			this.engine.move(move);
 			this.update();
