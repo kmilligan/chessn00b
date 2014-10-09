@@ -179,11 +179,26 @@ var EngineFactory;
 				if(	square.rank < 8 &&
 					!this.board.squares[square.file][square.rank + 1].hasPiece())
 				{
-					result.push(this.board.squares[square.file][square.rank + 1]);
+					// still have to make sure wouldn't cause check.
+					postMoveEngine.setFEN(currFEN);
+					var notation = '' + square.name 
+						+ this.board.squares[square.file][square.rank + 1].name;
+					postMoveEngine.move(notation, true);
+
+					if(!postMoveEngine.whiteInCheck())
+						result.push(this.board.squares[square.file][square.rank + 1]);
 
 					if(square.rank == 2 &&
 						!this.board.squares[square.file][square.rank + 2].hasPiece())
-						result.push(this.board.squares[square.file][square.rank + 2]);
+					{
+						postMoveEngine.setFEN(currFEN);
+						var notation = '' + square.name 
+							+ this.board.squares[square.file][square.rank + 2].name;
+						postMoveEngine.move(notation, true);
+
+						if(!postMoveEngine.whiteInCheck())
+							result.push(this.board.squares[square.file][square.rank + 2]);
+					}
 				}
 			}
 			else
@@ -191,11 +206,26 @@ var EngineFactory;
 				if(	square.rank > 1 &&
 					!this.board.squares[square.file][square.rank - 1].hasPiece())
 				{
-					result.push(this.board.squares[square.file][square.rank - 1]);
+					// still have to make sure wouldn't cause check.
+					postMoveEngine.setFEN(currFEN);
+					var notation = '' + square.name 
+						+ this.board.squares[square.file][square.rank - 1].name;
+					postMoveEngine.move(notation, true);
+
+					if(!postMoveEngine.blackInCheck())
+						result.push(this.board.squares[square.file][square.rank - 1]);
 
 					if(square.rank == 7 &&
 						!this.board.squares[square.file][square.rank - 2].hasPiece())
-						result.push(this.board.squares[square.file][square.rank - 2]);
+					{
+						postMoveEngine.setFEN(currFEN);
+						var notation = '' + square.name 
+							+ this.board.squares[square.file][square.rank - 2].name;
+						postMoveEngine.move(notation, true);
+
+						if(!postMoveEngine.blackInCheck())
+							result.push(this.board.squares[square.file][square.rank - 2]);
+					}
 				}
 			}
 		}

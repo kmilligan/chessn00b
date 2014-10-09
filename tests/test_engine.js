@@ -168,6 +168,10 @@ var testComplexValidMoves = function()
 	engine.setFEN('8/8/8/8/p7/1r6/1Q6/1K6 w - 0 1');
 	// ...but can still take rook, even tho protected!
 	equal(engine.getValidMovesForSquare(2,2).length, 1);
+
+	// other pieces can't move if king is already in check
+	engine.setFEN('4k3/pppp1ppp/8/4Q3/8/8/8/K7 b - 0 1');
+	equal(engine.getValidMovesForBlack().length, 2);
 };
 
 var testFindPiece = function()
