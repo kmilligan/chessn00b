@@ -179,10 +179,16 @@
 		this.element.append('<div class="fenview-status">'
 			+ '<span class="illegal-move">Illegal move</span>'
 			+ '<span class="your-move">Your move</span>'
+			+ '<span class="game-over">Game Over. </span>'
+			+ '<span class="you-win">You win!</span>'
+			+ '<span class="you-lose">You win!</span>'
 			+ '<span class="thinking">Thinking...</span>'
 			+ '</div>');
 		this.element.find('.illegal-move').hide();
 		this.element.find('.thinking').hide();
+		this.element.find('.game-over').hide();
+		this.element.find('.you-lose').hide();
+		this.element.find('.you-win').hide();
 		if(!this.playGame)
 			this.element.find('.your-move').hide();
 
@@ -276,7 +282,21 @@
 		setTimeout(function()
 		{
 			var myMove;
-			// check our opening book first
+
+			// see if we're in checkmate first
+			if(that.engine.blackInCheckmate())
+			{
+				that.thinking = false;
+				that.element.find('.thinking').hide();
+				that.element.find('.game-over').show();
+				that.element.find('.you-win').show();
+				return;
+			}
+
+			// what about stalemate?
+
+
+			// then check our opening book
 			var book = OpeningBook[that.getFEN()];
 
 			if(book)
@@ -293,8 +313,19 @@
 			that.engine.move(myMove);
 			that.thinking = false;
 			that.element.find('.thinking').hide();
-			that.element.find('.your-move').show();
 			that.update();
+
+			// see if they're in checkmate
+			if(that.engine.whiteInCheckmate())
+			{
+				that.element.find('.game-over').show();
+				that.element.find('.you-lose').show();
+				return;
+			}
+			else
+			{
+				that.element.find('.your-move').show();
+			}
 		}, 0);
 	};
 
