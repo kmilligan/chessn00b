@@ -230,6 +230,66 @@ var EngineFactory;
 			}
 		}
 
+		// might be able to castle
+		if(isKing)
+		{
+			if(isWhite
+				&& !this.whiteInCheck())
+			{
+				if(this.board.castlingOptions.indexOf('K') >= 0
+					&& !this.board.squares[square.file + 1][square.rank].hasPiece()
+					&& !this.isSquareAttackedByBlack(
+						this.board.squares[square.file + 1][square.rank])
+					&& !this.board.squares[square.file + 2][square.rank].hasPiece()
+					&& !this.isSquareAttackedByBlack(
+						this.board.squares[square.file + 2][square.rank])
+					)
+				{
+					result.push(this.board.squares[square.file + 2][square.rank]);
+				}
+				
+				if(this.board.castlingOptions.indexOf('Q') >= 0
+					&& !this.board.squares[square.file - 1][square.rank].hasPiece()
+					&& !this.isSquareAttackedByBlack(
+						this.board.squares[square.file - 1][square.rank])
+					&& !this.board.squares[square.file - 2][square.rank].hasPiece()
+					&& !this.isSquareAttackedByBlack(
+						this.board.squares[square.file - 2][square.rank])
+					)
+				{
+					result.push(this.board.squares[square.file - 2][square.rank]);
+				}
+			}
+			else if(!isWhite
+				&& !this.blackInCheck())
+			{
+				if(this.board.castlingOptions.indexOf('k') >= 0
+					&& !this.board.squares[square.file + 1][square.rank].hasPiece()
+					&& !this.isSquareAttackedByWhite(
+						this.board.squares[square.file + 1][square.rank])
+					&& !this.board.squares[square.file + 2][square.rank].hasPiece()
+					&& !this.isSquareAttackedByWhite(
+						this.board.squares[square.file + 2][square.rank])
+					)
+				{
+					result.push(this.board.squares[square.file + 2][square.rank]);
+				}
+
+				if(this.board.castlingOptions.indexOf('q') >= 0
+					&& !this.board.squares[square.file - 1][square.rank].hasPiece()
+					&& !this.isSquareAttackedByWhite(
+						this.board.squares[square.file - 1][square.rank])
+					&& !this.board.squares[square.file - 2][square.rank].hasPiece()
+					&& !this.isSquareAttackedByWhite(
+						this.board.squares[square.file - 2][square.rank])
+					)
+				{
+					result.push(this.board.squares[square.file - 2][square.rank]);
+				}
+
+			}
+		}
+
 		return result;
 	};
 
@@ -733,6 +793,28 @@ var EngineFactory;
 		var piece = startSquare.getPiece();
 		startSquare.removePiece();
 		endSquare.setPiece(piece);
+
+		// castling?
+		var isKing = (piece == 'k' || piece == 'K')?true:false;
+		if(isKing && Math.abs(startSquare.file - endSquare.file) == 2)
+		{
+			var rookSquare;
+			var targetSquare;
+			if(endSquare.file > startSquare.file)
+			{
+				rookSquare = this.board.squares[endSquare.file + 1][endSquare.rank];
+				targetSquare = this.board.squares[endSquare.file - 1][endSquare.rank];
+			}
+			else
+			{
+				rookSquare = this.board.squares[endSquare.file -2][endSquare.rank];
+				targetSquare = this.board.squares[endSquare.file + 1][endSquare.rank];
+			}
+
+			var rook = rookSquare.getPiece();
+			rookSquare.removePiece();
+			targetSquare.setPiece(rook);
+		}
 
 		// our caches are no longer valid
 		this.resetCaches();

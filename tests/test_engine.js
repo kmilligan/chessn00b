@@ -9,6 +9,7 @@ $.getScript('../src/board.js', function()
 		test("LessSimpleCoverage", testLessSimpleCoverage);
 		test("SimpleValidMoves", testSimpleValidMoves);
 		test("ComplexValidMoves", testComplexValidMoves);
+		test("Castling", testCastling);
 		test("FindPiece", testFindPiece);
 		test("SquareAttacked", testIsSquareAttacked);
 		test("InCheck", testInCheck);
@@ -79,25 +80,25 @@ var testSimpleCoverage = function()
 	var coverageBlack = engine.getBlacksCoveredSquares();
 	equal(coverageBlack.length, 21);
 
-	engine.setFEN('r7/8/8/8/8/8/1R6/8 w - 0 1');	
+	engine.setFEN('r7/8/8/8/8/8/1R6/8 w - - 0 1');	
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 14);
 	var coverageBlack = engine.getBlacksCoveredSquares();
 	equal(coverageBlack.length, 14);
 
-	engine.setFEN('b7/8/8/8/8/8/1B6/8 w - 0 1');	
+	engine.setFEN('b7/8/8/8/8/8/1B6/8 w - - 0 1');	
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 9);
 	var coverageBlack = engine.getBlacksCoveredSquares();
 	equal(coverageBlack.length, 7);
 
-	engine.setFEN('n7/8/8/8/8/8/1N6/8 w - 0 1');	
+	engine.setFEN('n7/8/8/8/8/8/1N6/8 w - - 0 1');	
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 4);
 	var coverageBlack = engine.getBlacksCoveredSquares();
 	equal(coverageBlack.length, 2);
 	
-	engine.setFEN('p7/8/8/8/8/8/1P6/8 w - 0 1');	
+	engine.setFEN('p7/8/8/8/8/8/1P6/8 w - - 0 1');	
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 2);
 	var coverageBlack = engine.getBlacksCoveredSquares();
@@ -108,7 +109,7 @@ var testLessSimpleCoverage = function()
 {
 	// king coverage shouldn't change, but others should add
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
 	equal(engine.board.getSquare(1,8).getPiece(), 'k');
 	equal(engine.board.getSquare(2,2).getPiece(), 'K');
 
@@ -119,7 +120,7 @@ var testLessSimpleCoverage = function()
 	equal(coverageBlack.length, 5);
 
 	// Queens are now blocked, reducing scope
-	engine.setFEN('qp6/8/8/8/8/1P6/1QP5/8 w - 0 1');	
+	engine.setFEN('qp6/8/8/8/8/1P6/1QP5/8 w - - 0 1');	
 	equal(engine.board.getSquare(1,8).getPiece(), 'q');
 	equal(engine.board.getSquare(2,2).getPiece(), 'Q');
 
@@ -130,7 +131,7 @@ var testLessSimpleCoverage = function()
 	equal(coverageBlack.length, 17);
 
 	// knights remain unaffected
-	engine.setFEN('n7/8/1r6/8/8/8/1N6/8 w - 0 1');	
+	engine.setFEN('n7/8/1r6/8/8/8/1N6/8 w - - 0 1');	
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 4);
 	var coverageBlack = engine.getBlacksCoveredSquares();
@@ -140,7 +141,7 @@ var testLessSimpleCoverage = function()
 var testSimpleValidMoves = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/r7/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/8/r7/PK6/8 w - - 0 1');	
 	equal(engine.board.getSquare(1,8).getPiece(), 'k');
 	equal(engine.board.getSquare(2,2).getPiece(), 'K');
 
@@ -151,33 +152,33 @@ var testSimpleValidMoves = function()
 	equal(engine.getValidMovesForSquare(2,2).length, 5);
 
 	// ...unless it's protected
-	engine.setFEN('kp6/8/8/8/1p6/r7/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/1p6/r7/PK6/8 w - - 0 1');	
 	equal(engine.getValidMovesForSquare(2,2).length, 4);
 };
 
 var testComplexValidMoves = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('8/8/8/8/8/1P6/P7/8 w - 0 1');	
+	engine.setFEN('8/8/8/8/8/1P6/P7/8 w - - 0 1');	
 
 	// pawns can move two on first move!
 	equal(engine.getValidMovesForSquare(2,3).length, 1);
 	equal(engine.getValidMovesForSquare(1,2).length, 2);
 
 	// piece can't move if it would put king in check!
-	engine.setFEN('8/8/8/8/p7/1r6/1Q6/1K6 w - 0 1');
+	engine.setFEN('8/8/8/8/p7/1r6/1Q6/1K6 w - - 0 1');
 	// ...but can still take rook, even tho protected!
 	equal(engine.getValidMovesForSquare(2,2).length, 1);
 
 	// other pieces can't move if king is already in check
-	engine.setFEN('4k3/pppp1ppp/8/4Q3/8/8/8/K7 b - 0 1');
+	engine.setFEN('4k3/pppp1ppp/8/4Q3/8/8/8/K7 b - - 0 1');
 	equal(engine.getValidMovesForBlack().length, 2);
 };
 
 var testFindPiece = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
 
 	equal(engine.findPiece('K')[0].getPiece(), 'K');
 	equal(engine.findPiece('k')[0].getPiece(), 'k');
@@ -186,18 +187,18 @@ var testFindPiece = function()
 var testIsSquareAttacked = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
 	ok(!engine.isSquareAttacked(engine.findPiece('K')[0]));
 	ok(!engine.isSquareAttacked(engine.findPiece('k')[0]));
 
 	// black king protected, white not
-	engine.setFEN('kp5R/8/8/8/8/q7/PK6/8 w - 0 1');	
+	engine.setFEN('kp5R/8/8/8/8/q7/PK6/8 w - - 0 1');	
 	//engine.dump();
 	ok(engine.isSquareAttacked(engine.findPiece('K')[0]));
 	ok(!engine.isSquareAttacked(engine.findPiece('k')[0]));
 
 	// can't protect against the knight!
-	engine.setFEN('kp6/2N5/8/8/1q6/1P6/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/2N5/8/8/1q6/1P6/PK6/8 w - - 0 1');	
 	ok(!engine.isSquareAttacked(engine.findPiece('K')[0]));
 	ok(engine.isSquareAttacked(engine.findPiece('k')[0]));
 };
@@ -209,11 +210,11 @@ var testInCheck = function()
 	// b) who has the move? shouldn't matter?
 
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
 	ok(!engine.blackInCheck());	
 	ok(!engine.whiteInCheck());	
 
-	engine.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - - 0 1');	
 	ok(!engine.blackInCheck());	
 	ok(engine.whiteInCheck());	
 };
@@ -221,28 +222,49 @@ var testInCheck = function()
 var testInCheckmate = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
 	ok(!engine.blackInCheckmate());	
 	ok(!engine.whiteInCheckmate());	
 
-	engine.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - 0 1');	
+	engine.setFEN('kp6/1q6/8/8/8/8/PK6/8 w - - 0 1');	
 	ok(!engine.blackInCheckmate());	
 	ok(!engine.whiteInCheckmate());	
 
-	engine.setFEN('8/8/8/8/8/1k6/1q6/1K6 w - 0 1');	
+	engine.setFEN('8/8/8/8/8/1k6/1q6/1K6 w - - 0 1');	
 	ok(engine.whiteInCheckmate());	
 
 	// this one is trickier because a1 is not *currently* covered
 	// but *would be* if the King wanted to go there.
-	engine.setFEN('8/8/8/8/1k6/2q5/PK6/1R6 w - 0 1');	
+	engine.setFEN('8/8/8/8/1k6/2q5/PK6/1R6 w - - 0 1');	
 	equal(engine.getValidMovesForSquare(2,2).length, 0);
 	ok(engine.whiteInCheckmate());	
+};
+
+var testCastling = function()
+{
+	var engine = EngineFactory.create();
+	// pretend we've already moved 
+	// (or done something to make castling not an option)
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R w - - 0 1');
+	equal(engine.getValidMovesForSquare(5,1).length, 5);
+
+	// ...but now it is
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1');
+	equal(engine.getValidMovesForSquare(5,1).length, 7);
+	
+	// ...but now it's now cuz squares are covered
+	engine.setFEN('r3k1r1/8/8/8/8/8/8/R3K2R w KQkq - 0 1');
+	equal(engine.getValidMovesForSquare(5,1).length, 6);
+
+	// and if we move, the rook should too
+	engine.move('e1c1');
+	equal(engine.getPositionFEN(), 'r3k1r1/8/8/8/8/8/8/2KR3R');
 };
 
 var testStaticPieceValue = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('rnbqk3/8/8/8/8/8/PPPPP3/RNBQK3 w - 0 1');	
+	engine.setFEN('rnbqk3/8/8/8/8/8/PPPPP3/RNBQK3 w - - 0 1');	
 	equal(engine.getWhiteStaticValue(), 250);	
 	equal(engine.getBlackStaticValue(), 200);	
 };
@@ -250,7 +272,7 @@ var testStaticPieceValue = function()
 var testDynamicPieceValue = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('2b1kb2/8/8/8/8/8/8/3QK3 w - 0 1');	
+	engine.setFEN('2b1kb2/8/8/8/8/8/8/3QK3 w - - 0 1');	
 	equal(engine.getWhiteDynamicValue(), 23);	
 	equal(engine.getBlackDynamicValue(), 29);	
 };
@@ -270,13 +292,13 @@ var testSimpleMove = function()
 var testSimpleBestMove = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('5q2/6r1/8/8/8/8/7K/8 b - 0 1');
+	engine.setFEN('5q2/6r1/8/8/8/8/7K/8 b - - 0 1');
 	equal(engine.getBestMoveForBlack(), 'f8h8');
 
-	engine.setFEN('q7/5p2/6R1/8/8/8/8/8 b - 0 1');
+	engine.setFEN('q7/5p2/6R1/8/8/8/8/8 b - - 0 1');
 	equal(engine.getBestMoveForBlack(), 'f7g6');
 	
-	engine.setFEN('8/6p1/q5R1/8/8/8/8/8 w - 0 1');
+	engine.setFEN('8/6p1/q5R1/8/8/8/8/8 w - - 0 1');
 	equal(engine.getBestMoveForWhite(), 'g6a6');
 };
 
@@ -285,7 +307,7 @@ var test2PlyBestMove = function()
 	var engine = EngineFactory.create();
 	// have a choice...take the queen (and lose next turn)
 	// or take the bishop
-	engine.setFEN('8/p7/1q/1R5b/8/8/8/8 w - 0 1');
+	engine.setFEN('8/p7/1q/1R5b/8/8/8/8 w - - 0 1');
 	equal(engine.getBestMoveForWhite(), 'b5h5');
 };
 

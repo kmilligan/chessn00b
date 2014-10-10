@@ -134,6 +134,10 @@ var BoardFactory;
 	Board.init = function()
 	{
 		this.colorToMove = 1;
+		this.castlingOptions = '-';
+		this.enpassantTarget = '-';
+		this.halfMoveClock = 0;
+		this.fullMoveNumber = 0;
 
 		// initialize our Squares
 		this.squares = [];
@@ -169,6 +173,17 @@ var BoardFactory;
 
 		// setup the state
 		this.colorToMove = (parts[1] == 'w'?1:0);
+		if(parts[2])
+			this.castlingOptions = parts[2];
+		
+		if(parts[3])
+			this.enpassantTarget = parts[3];
+
+		if(typeof parts[4] != 'undefined')
+			this.halfMoveClock = parseInt(parts[4], 10);
+
+		if(typeof parts[5] != 'undefined')
+			this.fullMoveNumber = parseInt(parts[5], 10);
 	};
 
 	Board.setRankFEN = function(rank, fen)
