@@ -13,7 +13,7 @@
 	/**
 	* Attach ourselves to jQuery so we can be used as a plugin
 	*/
-	$.fn.fenview = function(options)
+	$.fn.chessn00b = function(options)
 	{
 		if(!options)
 			options = {};
@@ -74,10 +74,10 @@
 	DisplaySquare.init = function(square)
 	{
 		this.square = square;
-		this.element = $('<div class="fenview-square">&nbsp;</div>');
+		this.element = $('<div class="chessn00b-square">&nbsp;</div>');
 		this.element[0].displaySquare = this;
 		this.element.attr('rel', this.square.name);
-		this.element.addClass(this.square.color?'fenview-light-square':'fenview-dark-square');
+		this.element.addClass(this.square.color?'chessn00b-light-square':'chessn00b-dark-square');
 
 		return this;
 	};
@@ -96,17 +96,17 @@
 
 	DisplaySquare.lite = function()
 	{
-		this.element.addClass('square-lit');
+		this.element.addClass('chessn00b-square-lit');
 	};
 	
 	DisplaySquare.unlite = function()
 	{
-		this.element.removeClass('square-lit');
+		this.element.removeClass('chessn00b-square-lit');
 	};
 
 	DisplaySquare.toggleLite = function()
 	{
-		if(this.element.hasClass('square-lit'))
+		if(this.element.hasClass('chessn00b-square-lit'))
 			this.unlite();
 		else
 			this.lite();
@@ -130,7 +130,7 @@
 		this.board = BoardFactory.create();
 		this.engine = EngineFactory.create(this.board);
 		this.playGame = options.playGame;
-		this.lastClickedSquare;
+		this.lastClickedSquare = null;
 		this.displaySquares = [];
 		this.thinking = false;
 
@@ -165,7 +165,7 @@
 		{
 			// container div for each rank
 			// to keep things from spilling
-			var rank = $('<div class="fenview-rank" rel="' + r + '"></div>');
+			var rank = $('<div class="chessn00b-rank" rel="' + r + '"></div>');
 
 			for(var f = 1; f < 9; f++)
 			{
@@ -176,8 +176,8 @@
 		}
 
 		// attach our status element
-		this.element.append('<div class="fenview-status">'
-			+ '<span class="illegal-move">Illegal move</span>'
+		this.element.append('<div class="chessn00b-status">'
+			+ '<span class="illegal-move">Illegal move. </span>'
 			+ '<span class="your-move">Your move</span>'
 			+ '<span class="game-over">Game Over. </span>'
 			+ '<span class="you-win">You win!</span>'
@@ -198,7 +198,7 @@
 
 		// setup our click handler
 		var that = this;
-		this.element.on('click', '.fenview-square', function()
+		this.element.on('click', '.chessn00b-square', function()
 		{
 			that.squareClicked($(this));
 			return false;
@@ -217,7 +217,7 @@
 		}	
 
 		var rule = '.' + this.id +
-				' .fenview-square { font-size: ' 
+				' .chessn00b-square { font-size: ' 
 				+ Math.ceil(width * 0.82) 
 				+ 'px; ' // no space before px!
 				+ ' height: ' + width + 'px; '

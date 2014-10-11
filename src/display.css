@@ -1,10 +1,10 @@
-.fenview-rank
+.chessn00b-rank
 {
 	width: 100%;
 	overflow: auto;
 }
 
-.fenview-square
+.chessn00b-square
 {
 	width: 12.5%;
 	float: left;
@@ -12,27 +12,27 @@
 	text-align: center;
 }
 
-.fenview-dark-square
+.chessn00b-dark-square
 {
 	background-color: #b58863;
 }
 
-.fenview-light-square
+.chessn00b-light-square
 {
 	background-color: #f0d9b5;
 }
 
-.square-lit
+.chessn00b-square-lit
 {
 	background-color: #29f;
 }
 
-.fenview-status
+.chessn00b-status
 {
 	font-family: sans-serif;
 }
 
-.illegal-move
+.chessn00b-status .illegal-move
 {
 	color: #c22f12;
 }
