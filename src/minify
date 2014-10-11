@@ -1,0 +1,37 @@
+#!/bin/bash
+# minify our javascript using Google Closure Compiler
+# and copy (along with css) into main directory
+
+PROJECT=chessn00b
+JAR_PATH='/usr/local/bin/compiler.jar'
+
+if [ ! -f "$JAR_PATH" ];
+then
+	echo "Missing compiler (looked in $JAR_PATH). Download the latest version http://dl.google.com/closure-compiler/compiler-latest.zip , unpack, and stick it in the directory above."
+	exit 1
+fi
+
+# combine our js into one file first...
+SOURCE_PATH=/tmp/$PROJECT.js
+cat *.js > $SOURCE_PATH
+
+if [ ! -f "$SOURCE_PATH" ];
+then
+	echo "Source file $SOURCE_PATH not found."
+	exit 1
+fi
+
+if [ ! -s "$SOURCE_PATH" ];
+then
+	echo "Source file $SOURCE_PATH is empty!"
+	exit 1
+fi
+
+TARGET=$PROJECT".min.js"
+TARGET_PATH="../"$TARGET
+
+java -jar /usr/local/bin/compiler.jar --js $SOURCE_PATH --js_output_file $TARGET_PATH
+
+# atm, we just have the one css file...
+#@see https://gist.github.com/dominicmartineau/5483359
+cat *.css | sed -e 's/^[ \t]*//g; s/[ \t]*$//g; s/\([:{;,]\) /\1/g; s/ {/{/g; s/\/\*.*\*\///g; /^$/d' | sed -e :a -e '$!N; s/\n\(.\)/\1/; ta' > ../$PROJECT.min.css
