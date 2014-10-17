@@ -52,7 +52,7 @@ var testFEN = function()
 	engine.setFEN(fen);
 	equal(engine.board.getSquare(4,1).getPiece(), 'Q');
 	equal(engine.board.getSquare(4,8).getPiece(), 'q');
-	ok(engine.board.isWhiteToMove());
+	equal(engine.board.getColorToMove(), BoardFactory.getColorMap().white);
 
 	equal(engine.getPositionFEN(), 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
 };
@@ -299,6 +299,7 @@ var testSimpleBestMove = function()
 	equal(engine.getBestMoveForBlack(), 'f7g6');
 	
 	engine.setFEN('8/6p1/q5R1/8/8/8/8/8 w - - 0 1');
+	equal(engine.board.getColorToMove(), BoardFactory.getColorMap().white);
 	equal(engine.getBestMoveForWhite(), 'g6a6');
 };
 

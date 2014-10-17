@@ -22,6 +22,7 @@ var EngineFactory;
 	"use strict";
 
 	var PieceMap = BoardFactory.getPieceMap();
+	var ColorMap = BoardFactory.getColorMap();
 
 	/**
 	* Object representing the engine;
@@ -305,6 +306,14 @@ var EngineFactory;
 			start = this.board.getSquare(startOrMove.substr(0,2));
 			end = this.board.getSquare(startOrMove.substr(2,2));
 		}
+
+		// no piece?
+		if(!start.hasPiece())
+			return false;
+
+		// not your turn?
+		if(PieceMap.getColor(start.getPiece()) != this.board.getColorToMove())
+			return false;
 
 		var valids = this.getValidMovesForSquare(start);
 		for(var i = 0; i < valids.length; i++)
@@ -816,6 +825,9 @@ var EngineFactory;
 			targetSquare.setPiece(rook);
 		}
 
+		// update move number/color
+		this.board.incrementMove();
+
 		// our caches are no longer valid
 		this.resetCaches();
 
@@ -1008,7 +1020,9 @@ var EngineFactory;
 	{
 		// this isn't a true, separate clone...
 		var board = EngineFactory.create();
-		board.setFEN(this.getPositionFEN());
+		board.setFEN(this.getPositionFEN()
+			+ ' '
+			+ (this.board.getColorToMove() == ColorMap.white?'w':'b'));
 		// doesn't seem to work, not sure why
 		//var board = jQuery.extend(true, {}, this);
 		// doesn't work for complex objects
@@ -1041,7 +1055,8 @@ var EngineFactory;
 	Engine.alphabeta = function(depth, a, b, isWhite)
 	{
 		abExamined++;
-		var currFEN = this.getPositionFEN();
+		var currFEN = this.getPositionFEN()
+			+ ' ' + (this.board.getColorToMove() == ColorMap.white?'w':'b');
 		var val;
 
 		// test terminal conditions

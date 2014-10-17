@@ -48,6 +48,11 @@ var BoardFactory;
 		return(piece.charCodeAt(0) < 91?true:false);
 	};
 
+	PieceMap.getColor = function(piece)
+	{
+		return (this.isWhite(piece)?ColorMap.white:ColorMap.black);
+	};
+
 	// Map file numbers to letter names
 	// and vice versa
 	var FileMap =
@@ -68,6 +73,13 @@ var BoardFactory;
 		'f': '6',
 		'g': '7',
 		'h': '8'
+	};
+
+	// color names
+	var ColorMap = 
+	{
+		white: 1,
+		black: -1
 	};
 
 	/**
@@ -133,7 +145,7 @@ var BoardFactory;
 	var Board = {};	
 	Board.init = function()
 	{
-		this.colorToMove = 1;
+		this.colorToMove = ColorMap.white;
 		this.castlingOptions = '-';
 		this.enpassantTarget = '-';
 		this.halfMoveClock = 0;
@@ -155,11 +167,6 @@ var BoardFactory;
 		return this;
 	};
 
-	Board.isWhiteToMove = function()
-	{
-		return (this.colorToMove == 1?true:false);
-	};
-
 	Board.setFEN = function(fen)
 	{
 		var parts = fen.split(' ');
@@ -172,7 +179,7 @@ var BoardFactory;
 		}
 
 		// setup the state
-		this.colorToMove = (parts[1] == 'w'?1:0);
+		this.colorToMove = (parts[1] == 'w'?ColorMap.white:ColorMap.black);
 		if(parts[2])
 			this.castlingOptions = parts[2];
 		
@@ -211,6 +218,24 @@ var BoardFactory;
 					file++;
 				}
 			}
+		}
+	};
+
+	Board.getColorToMove = function()
+	{
+		return this.colorToMove;
+	};
+
+	Board.incrementMove = function()
+	{
+		if(this.colorToMove == ColorMap.white)
+		{
+			this.colorToMove = ColorMap.black;
+		}
+		else
+		{
+			this.colorToMove = ColorMap.white;
+			this.fullMoveNumber++;
 		}
 	};
 
@@ -281,7 +306,12 @@ var BoardFactory;
 		that.getFileMap = function()
 		{
 			return FileMap;
-		}
+		};
+
+		that.getColorMap = function()
+		{
+			return ColorMap;
+		};
 
 		return that;
 	})();
