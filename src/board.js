@@ -249,6 +249,11 @@ var BoardFactory;
 		this.squares[file][rank].removePiece();
 	};
 
+	Board.hasPiece = function(file, rank)
+	{
+		return this.squares[file][rank].hasPiece(); 
+	};
+
 	Board.getPiece = function(file, rank)
 	{
 		return this.squares[file][rank].getPiece(); 

@@ -100,11 +100,11 @@ var EngineFactory;
 		{
 			for(var r = 1; r < 9; r++)
 			{
-				if(!this.board.squares[f][r].hasPiece())
+				if(!this.board.hasPiece(f,r))
 					continue;
 
 				curr = this.board.squares[f][r].name;
-				isWhite = PieceMap.isWhite(this.board.squares[f][r].getPiece());
+				isWhite = PieceMap.isWhite(this.board.getPiece(f, r));
 
 				if(isWhite != forWhite)
 					continue;
@@ -178,7 +178,7 @@ var EngineFactory;
 			if(isWhite)
 			{
 				if(	square.rank < 8 &&
-					!this.board.squares[square.file][square.rank + 1].hasPiece())
+					!this.board.hasPiece(square.file,square.rank + 1))
 				{
 					// still have to make sure wouldn't cause check.
 					postMoveEngine.setFEN(currFEN);
@@ -190,7 +190,7 @@ var EngineFactory;
 						result.push(this.board.squares[square.file][square.rank + 1]);
 
 					if(square.rank == 2 &&
-						!this.board.squares[square.file][square.rank + 2].hasPiece())
+						!this.board.hasPiece(square.file,square.rank + 2))
 					{
 						postMoveEngine.setFEN(currFEN);
 						var notation = '' + square.name 
@@ -205,7 +205,7 @@ var EngineFactory;
 			else
 			{
 				if(	square.rank > 1 &&
-					!this.board.squares[square.file][square.rank - 1].hasPiece())
+					!this.board.hasPiece(square.file, square.rank - 1))
 				{
 					// still have to make sure wouldn't cause check.
 					postMoveEngine.setFEN(currFEN);
@@ -217,7 +217,7 @@ var EngineFactory;
 						result.push(this.board.squares[square.file][square.rank - 1]);
 
 					if(square.rank == 7 &&
-						!this.board.squares[square.file][square.rank - 2].hasPiece())
+						!this.board.hasPiece(square.file, square.rank - 2))
 					{
 						postMoveEngine.setFEN(currFEN);
 						var notation = '' + square.name 
@@ -238,24 +238,20 @@ var EngineFactory;
 				&& !this.whiteInCheck())
 			{
 				if(this.board.castlingOptions.indexOf('K') >= 0
-					&& !this.board.squares[square.file + 1][square.rank].hasPiece()
-					&& !this.isSquareAttackedByBlack(
-						this.board.squares[square.file + 1][square.rank])
-					&& !this.board.squares[square.file + 2][square.rank].hasPiece()
-					&& !this.isSquareAttackedByBlack(
-						this.board.squares[square.file + 2][square.rank])
+					&& !this.board.hasPiece(square.file + 1,square.rank)
+					&& !this.isSquareAttackedByBlack(square.file + 1, square.rank)
+					&& !this.board.hasPiece(square.file + 2, square.rank)
+					&& !this.isSquareAttackedByBlack(square.file + 2, square.rank)
 					)
 				{
 					result.push(this.board.squares[square.file + 2][square.rank]);
 				}
 				
 				if(this.board.castlingOptions.indexOf('Q') >= 0
-					&& !this.board.squares[square.file - 1][square.rank].hasPiece()
-					&& !this.isSquareAttackedByBlack(
-						this.board.squares[square.file - 1][square.rank])
-					&& !this.board.squares[square.file - 2][square.rank].hasPiece()
-					&& !this.isSquareAttackedByBlack(
-						this.board.squares[square.file - 2][square.rank])
+					&& !this.board.hasPiece(square.file - 1, square.rank)
+					&& !this.isSquareAttackedByBlack(square.file - 1, square.rank)
+					&& !this.board.hasPiece(square.file - 2, square.rank)
+					&& !this.isSquareAttackedByBlack(square.file - 2, square.rank)
 					)
 				{
 					result.push(this.board.squares[square.file - 2][square.rank]);
@@ -265,24 +261,20 @@ var EngineFactory;
 				&& !this.blackInCheck())
 			{
 				if(this.board.castlingOptions.indexOf('k') >= 0
-					&& !this.board.squares[square.file + 1][square.rank].hasPiece()
-					&& !this.isSquareAttackedByWhite(
-						this.board.squares[square.file + 1][square.rank])
-					&& !this.board.squares[square.file + 2][square.rank].hasPiece()
-					&& !this.isSquareAttackedByWhite(
-						this.board.squares[square.file + 2][square.rank])
+					&& !this.board.hasPiece(square.file + 1, square.rank)
+					&& !this.isSquareAttackedByWhite(square.file + 1, square.rank)
+					&& !this.board.hasPiece(square.file + 2, square.rank)
+					&& !this.isSquareAttackedByWhite(square.file + 2, square.rank)
 					)
 				{
 					result.push(this.board.squares[square.file + 2][square.rank]);
 				}
 
 				if(this.board.castlingOptions.indexOf('q') >= 0
-					&& !this.board.squares[square.file - 1][square.rank].hasPiece()
-					&& !this.isSquareAttackedByWhite(
-						this.board.squares[square.file - 1][square.rank])
-					&& !this.board.squares[square.file - 2][square.rank].hasPiece()
-					&& !this.isSquareAttackedByWhite(
-						this.board.squares[square.file - 2][square.rank])
+					&& !this.board.hasPiece(square.file - 1, square.rank)
+					&& !this.isSquareAttackedByWhite(square.file - 1, square.rank)
+					&& !this.board.hasPiece(square.file - 2, square.rank)
+					&& !this.isSquareAttackedByWhite(square.file - 2, square.rank)
 					)
 				{
 					result.push(this.board.squares[square.file - 2][square.rank]);
@@ -345,10 +337,10 @@ var EngineFactory;
 		{
 			for(var r = 1; r < 9; r++)
 			{
-				if(!this.board.squares[f][r].hasPiece())
+				if(!this.board.hasPiece(f, r))
 					continue;
 	
-				var isWhite = PieceMap.isWhite(this.board.squares[f][r].getPiece());
+				var isWhite = PieceMap.isWhite(this.board.getPiece(f, r));
 
 				if(isWhite != forWhite)
 					continue;
@@ -382,7 +374,7 @@ var EngineFactory;
 		var result = [];
 		var diag = [];
 
-		switch(this.board.squares[file][rank].getPiece())
+		switch(this.board.getPiece(file, rank))
 		{
 			case 'K':
 			case 'k':
@@ -436,28 +428,28 @@ var EngineFactory;
 			if(rank + i < 9 && !stop1)
 			{
 				options.push(this.board.squares[file][rank + i]);
-				if(this.board.squares[file][rank + i].hasPiece())
+				if(this.board.hasPiece(file, rank + i))
 					stop1 = true;
 			}
 
 			if(file + i < 9 && !stop2)
 			{
 				options.push(this.board.squares[file + i][rank]);
-				if(this.board.squares[file + i][rank].hasPiece())
+				if(this.board.hasPiece(file + i, rank))
 					stop2 = true;
 			}
 
 			if(rank - i > 0 && !stop3)
 			{
 				options.push(this.board.squares[file][rank - i]);
-				if(this.board.squares[file][rank - i].hasPiece())
+				if(this.board.hasPiece(file, rank - i))
 					stop3 = true;
 			}
 
 			if(file - i > 0 && !stop4)
 			{
 				options.push(this.board.squares[file - i][rank]);
-				if(this.board.squares[file - i][rank].hasPiece())
+				if(this.board.hasPiece(file - i, rank))
 					stop4 = true;
 			}
 		}
@@ -483,7 +475,7 @@ var EngineFactory;
 				{
 					currF = file + i;
 					options.push(this.board.squares[currF][currR]);
-					if(this.board.squares[currF][currR].hasPiece())
+					if(this.board.hasPiece(currF, currR))
 						stop1 = true;
 				}
 
@@ -491,7 +483,7 @@ var EngineFactory;
 				{
 					currF = file - i;
 					options.push(this.board.squares[currF][currR]);
-					if(this.board.squares[currF][currR].hasPiece())
+					if(this.board.hasPiece(currF, currR))
 						stop2 = true;
 				}
 			}
@@ -503,7 +495,7 @@ var EngineFactory;
 				{
 					currF = file + i;
 					options.push(this.board.squares[currF][currR]);
-					if(this.board.squares[currF][currR].hasPiece())
+					if(this.board.hasPiece(currF, currR))
 						stop3 = true;
 				}
 
@@ -511,7 +503,7 @@ var EngineFactory;
 				{
 					currF = file - i;
 					options.push(this.board.squares[currF][currR]);
-					if(this.board.squares[currF][currR].hasPiece())
+					if(this.board.hasPiece(currF, currR))
 						stop4 = true;
 				}
 			}
@@ -569,7 +561,7 @@ var EngineFactory;
 		var options = [];
 		
 		// need the color for direction
-		if(PieceMap.isWhite(this.board.squares[file][rank].getPiece()))
+		if(PieceMap.isWhite(this.board.getPiece(file, rank)))
 		{
 			if(rank < 8)
 			{
@@ -602,10 +594,10 @@ var EngineFactory;
 		{
 			for(var r = 1; r < 9; r++)
 			{
-				if(!this.board.squares[f][r].hasPiece())
+				if(!this.board.hasPiece(f, r))
 					continue;
 
-				if(this.board.squares[f][r].getPiece() == piece)
+				if(this.board.getPiece(f, r) == piece)
 					found.push(this.board.squares[f][r]);
 			}
 		}
@@ -682,7 +674,7 @@ var EngineFactory;
 			var empty = 0;
 			for(var f = 1; f < 9; f++)
 			{
-				if(!this.board.squares[f][r].hasPiece())
+				if(!this.board.hasPiece(f, r))
 				{
 					empty++;
 					continue;
@@ -694,7 +686,7 @@ var EngineFactory;
 					empty = 0;
 				}
 
-				currRank += this.board.squares[f][r].getPiece();
+				currRank += this.board.getPiece(f, r);
 			}
 			
 			if(empty > 0)
@@ -862,10 +854,10 @@ var EngineFactory;
 		{
 			for(var r = 1; r < 9; r++)
 			{
-				if(!this.board.squares[f][r].hasPiece())
+				if(!this.board.hasPiece(f, r))
 					continue;
 
-				switch(this.board.squares[f][r].getPiece())
+				switch(this.board.getPiece(f, r))
 				{
 					case 'Q':
 					case 'q':
@@ -894,7 +886,7 @@ var EngineFactory;
 				// give us more room for dynamic values
 				curr *= 10;
 
-				if(PieceMap.isWhite(this.board.squares[f][r].getPiece()))
+				if(PieceMap.isWhite(this.board.getPiece(f, r)))
 					this.whiteStaticValue += curr;
 				else
 					this.blackStaticValue += curr;
@@ -958,10 +950,10 @@ var EngineFactory;
 		{
 			for(var r = 1; r < 9; r++)
 			{
-				if(!this.board.squares[f][r].hasPiece())
+				if(!this.board.hasPiece(f, r))
 					continue;
 
-				if(PieceMap.isWhite(this.board.squares[f][r].getPiece()) != forWhite)
+				if(PieceMap.isWhite(this.board.getPiece(f, r)) != forWhite)
 					continue;
 
 				var moves = this.getValidMovesForSquare(f,r);
