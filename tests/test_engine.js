@@ -265,22 +265,24 @@ var testCastling = function()
 	// and if we move, the rook should too
 	engine.move('e1c1');
 	equal(engine.getPositionFEN(), 'r3k1r1/8/8/8/8/8/8/2KR3R');
+	// ...and castling should no longer be an option
+	equal(engine.board.castlingOptions, 'kq');
 };
 
 var testStaticPieceValue = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('rnbqk3/8/8/8/8/8/PPPPP3/RNBQK3 w - - 0 1');	
-	equal(engine.getWhiteStaticValue(), 250);	
-	equal(engine.getBlackStaticValue(), 200);	
+	equal(engine.getWhiteStaticValue(), 262.5);	
+	equal(engine.getBlackStaticValue(), 212.5);	
 };
 
 var testDynamicPieceValue = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('2b1kb2/8/8/8/8/8/8/3QK3 w - - 0 1');	
-	equal(engine.getWhiteDynamicValue(), 23);	
-	equal(engine.getBlackDynamicValue(), 29);	
+	equal(engine.getWhiteDynamicValue(), 12);	
+	equal(engine.getBlackDynamicValue(), 15);	
 };
 
 var testSimpleMove = function()

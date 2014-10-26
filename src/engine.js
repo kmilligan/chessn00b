@@ -809,6 +809,18 @@ var EngineFactory;
 			var rook = this.board.getPiece(rookSquare.file, rookSquare.rank);
 			this.board.removePiece(rookSquare.file, rookSquare.rank);
 			this.board.setPiece(rook, targetSquare.file, targetSquare.rank);
+		
+			if(PieceMap.isWhite(rook))
+			{
+				this.board.castlingOptions = this.board.castlingOptions.replace('KQ', '');
+			}
+			else
+			{
+				this.board.castlingOptions = this.board.castlingOptions.replace('kq', '');
+			}
+
+			if(this.board.castlingOptions == '')
+				this.board.castlingOptions = '-';
 		}
 
 		// update move number/color
@@ -851,11 +863,13 @@ var EngineFactory;
 				if(!this.board.hasPiece(f, r))
 					continue;
 
+				// values based on Kaufman's seminal 1999 article
+				//@see http://home.comcast.net/~danheisman/Articles/evaluation_of_material_imbalance.htm
 				switch(this.board.getPiece(f, r))
 				{
 					case 'Q':
 					case 'q':
-						curr = 9;
+						curr = 9.75;
 					break;
 					case 'R':
 					case 'r':
@@ -863,11 +877,11 @@ var EngineFactory;
 					break;
 					case 'B':
 					case 'b':
-						curr = 3;
+						curr = 3.25;
 					break;
 					case 'N':
 					case 'n':
-						curr = 3;
+						curr = 3.25;
 					break;
 					case 'P':
 					case 'p':
@@ -912,14 +926,15 @@ var EngineFactory;
 		this.blackDynamicValue = 0;
 
 		// do we have both bishops?
+		// worth a 1/2 pawn
 		if(this.findPiece('b').length >= 2)
-			this.blackDynamicValue += 10;
+			this.blackDynamicValue += 5;
 
 		if(this.findPiece('B').length >= 2)
-			this.whiteDynamicValue += 10;
+			this.whiteDynamicValue += 5;
 
 		// how much space to our pieces have?
-		var divisor = 1;
+		var divisor = 2;
 		var covers = this.getBlacksCoveredSquares();
 		this.blackDynamicValue += Math.round(covers.length / divisor);
 
