@@ -80,6 +80,14 @@ var BoardFactory;
 		return FileMap[file] + rank; 
 	};
 
+	FileMap.coords = function(name)
+	{
+		return { 	
+				file: parseInt(FileMap[name.substr(0,1)],10), 
+				rank: parseInt(name.substr(1,1),10)
+			};
+	};
+
 	// color names
 	var ColorMap = 
 	{

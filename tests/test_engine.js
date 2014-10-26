@@ -180,27 +180,33 @@ var testFindPiece = function()
 	var engine = EngineFactory.create();
 	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
 
-	equal(engine.findPiece('K')[0].getPiece(), 'K');
-	equal(engine.findPiece('k')[0].getPiece(), 'k');
+	equal(engine.findPiece('K')[0].file, 2);
+	equal(engine.findPiece('k')[0].rank, 8);
 };
 
 var testIsSquareAttacked = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
-	ok(!engine.isSquareAttacked(engine.findPiece('K')[0]));
-	ok(!engine.isSquareAttacked(engine.findPiece('k')[0]));
+	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');
+	var whiteKing = engine.findPiece('K')[0];
+	var blackKing = engine.findPiece('k')[0];
+	ok(!engine.isSquareAttacked(whiteKing.file, whiteKing.rank));
+	ok(!engine.isSquareAttacked(blackKing.file, blackKing.rank));
 
 	// black king protected, white not
 	engine.setFEN('kp5R/8/8/8/8/q7/PK6/8 w - - 0 1');	
 	//engine.dump();
-	ok(engine.isSquareAttacked(engine.findPiece('K')[0]));
-	ok(!engine.isSquareAttacked(engine.findPiece('k')[0]));
+	var whiteKing = engine.findPiece('K')[0];
+	var blackKing = engine.findPiece('k')[0];
+	ok(engine.isSquareAttacked(whiteKing.file, whiteKing.rank));
+	ok(!engine.isSquareAttacked(blackKing.file, blackKing.rank));
 
 	// can't protect against the knight!
 	engine.setFEN('kp6/2N5/8/8/1q6/1P6/PK6/8 w - - 0 1');	
-	ok(!engine.isSquareAttacked(engine.findPiece('K')[0]));
-	ok(engine.isSquareAttacked(engine.findPiece('k')[0]));
+	var whiteKing = engine.findPiece('K')[0];
+	var blackKing = engine.findPiece('k')[0];
+	ok(!engine.isSquareAttacked(whiteKing.file, whiteKing.rank));
+	ok(engine.isSquareAttacked(blackKing.file, blackKing.rank));
 };
 
 var testInCheck = function()

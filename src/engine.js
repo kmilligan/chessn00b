@@ -113,7 +113,7 @@ var EngineFactory;
 				moves = this.getValidMovesForSquare(f,r);
 				for(var i = 0; i < moves.length; i++)
 				{
-					move = '' + curr + moves[i].name;
+					move = '' + curr + moves[i];
 					if(isWhite)
 						this.validWhiteMoves.push(move);
 					else
@@ -138,34 +138,40 @@ var EngineFactory;
 
 		var currFEN = this.getPositionFEN();
 		var postMoveEngine = EngineFactory.create();
-		var possible = this.getCoveredSquares(file, rank);
+		var possibles = this.getCoveredSquares(file, rank);
 
-		if(possible.length == 0)
+		if(possibles.length == 0)
 			return result;
 
-		for(var i = 0; i < possible.length; i++)
+		var possibleFile, possibleRank, possibleHasPiece, possiblePiece;
+		for(var i = 0; i < possibles.length; i++)
 		{
+			possibleFile = FileMap[possibles[i].substr(0,1)];
+			possibleRank = possibles[i].substr(1,1);
+			possibleHasPiece = this.board.hasPiece(possibleFile, possibleRank);
+			possiblePiece = this.board.getPiece(possibleFile, possibleRank);
+
 			// can't move to where our own pieces are
-			if(possible[i].hasPiece()
-				&& PieceMap.isWhite(possible[i].getPiece()) == isWhite)
+			if(possibleHasPiece
+				&& PieceMap.isWhite(possiblePiece) == isWhite)
 				continue;
 
 			// pawn can only move to a covered if an opposing piece is there
 			if(isPawn)
 			{
-				if(!possible[i].hasPiece())
+				if(!possibleHasPiece)
 					continue;
 			}
 
 			// can't make any move if it would cause check
 			postMoveEngine.setFEN(currFEN);
-			var notation = '' + squareName + possible[i].name;
+			var notation = '' + squareName + possibles[i];
 			postMoveEngine.move(notation, true);
 			if((isWhite && postMoveEngine.whiteInCheck())
 				|| (!isWhite && postMoveEngine.blackInCheck()))
 				continue;
 
-			result.push(possible[i]);
+			result.push(possibles[i]);
 		}
 
 		// for pawns, we may also be able to move directly ahead...
@@ -184,7 +190,7 @@ var EngineFactory;
 					postMoveEngine.move(notation, true);
 
 					if(!postMoveEngine.whiteInCheck())
-						result.push(this.board.squares[file][rank + 1]);
+						result.push(FileMap.name(file, rank + 1));
 
 					if( rank == 2 &&
 						!this.board.hasPiece(file,rank + 2))
@@ -195,7 +201,7 @@ var EngineFactory;
 						postMoveEngine.move(notation, true);
 
 						if(!postMoveEngine.whiteInCheck())
-							result.push(this.board.squares[file][rank + 2]);
+							result.push(FileMap.name(file, rank + 2));
 					}
 				}
 			}
@@ -211,7 +217,7 @@ var EngineFactory;
 					postMoveEngine.move(notation, true);
 
 					if(!postMoveEngine.blackInCheck())
-						result.push(this.board.squares[file][rank - 1]);
+						result.push(FileMap.name(file, rank - 1));
 
 					if( rank == 7 &&
 						!this.board.hasPiece(file, rank - 2))
@@ -222,7 +228,7 @@ var EngineFactory;
 						postMoveEngine.move(notation, true);
 
 						if(!postMoveEngine.blackInCheck())
-							result.push(this.board.squares[file][rank - 2]);
+							result.push(FileMap.name(file, rank - 2));
 					}
 				}
 			}
@@ -241,7 +247,7 @@ var EngineFactory;
 					&& !this.isSquareAttackedByBlack(file + 2, rank)
 					)
 				{
-					result.push(this.board.squares[file + 2][rank]);
+					result.push(FileMap.name(file + 2, rank));
 				}
 				
 				if(this.board.castlingOptions.indexOf('Q') >= 0
@@ -251,7 +257,7 @@ var EngineFactory;
 					&& !this.isSquareAttackedByBlack(file - 2, rank)
 					)
 				{
-					result.push(this.board.squares[file - 2][rank]);
+					result.push(FileMap.name(file - 2, rank));
 				}
 			}
 			else if(!isWhite
@@ -264,7 +270,7 @@ var EngineFactory;
 					&& !this.isSquareAttackedByWhite(file + 2, rank)
 					)
 				{
-					result.push(this.board.squares[file + 2][rank]);
+					result.push(FileMap.name(file + 2, rank));
 				}
 
 				if(this.board.castlingOptions.indexOf('q') >= 0
@@ -274,7 +280,7 @@ var EngineFactory;
 					&& !this.isSquareAttackedByWhite(file - 2, rank)
 					)
 				{
-					result.push(this.board.squares[file - 2][rank]);
+					result.push(FileMap.name(file - 2, rank));
 				}
 			}
 		}
@@ -287,26 +293,31 @@ var EngineFactory;
 	Engine.isValidMove = function(startOrMove, end)
 	{
 		var start;
+		var endName;
 		if(typeof startOrMove == 'object')
+		{
 			start = startOrMove;
+			endName = FileMap.name(end.file, end.rank);
+		}
 		else
 		{
-			start = this.board.getSquare(startOrMove.substr(0,2));
-			end = this.board.getSquare(startOrMove.substr(2,2));
+			start = FileMap.coords(startOrMove.substr(0,2));
+			endName = startOrMove.substr(2,2);
 		}
 
 		// no piece?
-		if(!start.hasPiece())
+		if(!this.board.hasPiece(start.file, start.rank))
 			return false;
 
 		// not your turn?
-		if(PieceMap.getColor(start.getPiece()) != this.board.getColorToMove())
+		if(PieceMap.getColor(this.board.getPiece(start.file, start.rank)) 
+			!= this.board.getColorToMove())
 			return false;
 
 		var valids = this.getValidMovesForSquare(start.file, start.rank);
 		for(var i = 0; i < valids.length; i++)
 		{
-			if(valids[i] === end)
+			if(valids[i] === endName)
 				return true;
 		};
 
@@ -423,28 +434,28 @@ var EngineFactory;
 		{
 			if(rank + i < 9 && !stop1)
 			{
-				options.push(this.board.squares[file][rank + i]);
+				options.push(FileMap.name(file, rank + i));
 				if(this.board.hasPiece(file, rank + i))
 					stop1 = true;
 			}
 
 			if(file + i < 9 && !stop2)
 			{
-				options.push(this.board.squares[file + i][rank]);
+				options.push(FileMap.name(file + i, rank));
 				if(this.board.hasPiece(file + i, rank))
 					stop2 = true;
 			}
 
 			if(rank - i > 0 && !stop3)
 			{
-				options.push(this.board.squares[file][rank - i]);
+				options.push(FileMap.name(file, rank - i));
 				if(this.board.hasPiece(file, rank - i))
 					stop3 = true;
 			}
 
 			if(file - i > 0 && !stop4)
 			{
-				options.push(this.board.squares[file - i][rank]);
+				options.push(FileMap.name(file - i, rank));
 				if(this.board.hasPiece(file - i, rank))
 					stop4 = true;
 			}
@@ -470,7 +481,7 @@ var EngineFactory;
 				if(file + i < 9 && !stop1)
 				{
 					currF = file + i;
-					options.push(this.board.squares[currF][currR]);
+					options.push(FileMap.name(currF, currR));
 					if(this.board.hasPiece(currF, currR))
 						stop1 = true;
 				}
@@ -478,7 +489,7 @@ var EngineFactory;
 				if(file - i > 0 && !stop2)
 				{
 					currF = file - i;
-					options.push(this.board.squares[currF][currR]);
+					options.push(FileMap.name(currF, currR));
 					if(this.board.hasPiece(currF, currR))
 						stop2 = true;
 				}
@@ -490,7 +501,7 @@ var EngineFactory;
 				if(file + i < 9 && !stop3)
 				{
 					currF = file + i;
-					options.push(this.board.squares[currF][currR]);
+					options.push(FileMap.name(currF, currR));
 					if(this.board.hasPiece(currF, currR))
 						stop3 = true;
 				}
@@ -498,7 +509,7 @@ var EngineFactory;
 				if(file - i > 0 && !stop4)
 				{
 					currF = file - i;
-					options.push(this.board.squares[currF][currR]);
+					options.push(FileMap.name(currF, currR));
 					if(this.board.hasPiece(currF, currR))
 						stop4 = true;
 				}
@@ -515,18 +526,18 @@ var EngineFactory;
 		if(file - 1 > 0)
 		{
 			if(rank + 2 < 9)
-				options.push(this.board.squares[file - 1][rank + 2]);
+				options.push(FileMap.name(file - 1, rank + 2));
 
 			if(rank - 2 > 0)
-				options.push(this.board.squares[file - 1][rank - 2]);
+				options.push(FileMap.name(file - 1, rank - 2));
 
 			if(file - 2 > 0)
 			{
 				if(rank + 1 < 9)
-					options.push(this.board.squares[file - 2][rank + 1]);
+					options.push(FileMap.name(file - 2, rank + 1));
 
 				if(rank - 1 > 0)
-					options.push(this.board.squares[file - 2][rank - 1]);
+					options.push(FileMap.name(file - 2, rank - 1));
 			}
 		}
 
@@ -534,18 +545,18 @@ var EngineFactory;
 		if(file + 1 < 9)
 		{
 			if(rank + 2 < 9)
-				options.push(this.board.squares[file + 1][rank + 2]);
+				options.push(FileMap.name(file + 1, rank + 2));
 
 			if(rank - 2 > 0)
-				options.push(this.board.squares[file + 1][rank - 2]);
+				options.push(FileMap.name(file + 1, rank - 2));
 
 			if(file + 2 < 9)
 			{
 				if(rank + 1 < 9)
-					options.push(this.board.squares[file + 2][rank + 1]);
+					options.push(FileMap.name(file + 2, rank + 1));
 
 				if(rank - 1 > 0)
-					options.push(this.board.squares[file + 2][rank - 1]);
+					options.push(FileMap.name(file + 2, rank - 1));
 			}
 		}
 
@@ -562,10 +573,10 @@ var EngineFactory;
 			if(rank < 8)
 			{
 				if(file > 1)
-					options.push(this.board.squares[file - 1][rank + 1]);
+					options.push(FileMap.name(file - 1, rank + 1));
 
 				if(file < 8)
-					options.push(this.board.squares[file + 1][rank + 1]);
+					options.push(FileMap.name(file + 1, rank + 1));
 			}
 		}
 		else
@@ -573,10 +584,10 @@ var EngineFactory;
 			if(rank > 1)
 			{
 				if(file > 1)
-					options.push(this.board.squares[file - 1][rank - 1]);
+					options.push(FileMap.name(file - 1, rank - 1));
 
 				if(file < 8)
-					options.push(this.board.squares[file + 1][rank - 1]);
+					options.push(FileMap.name(file + 1, rank - 1));
 			}
 		}
 		
@@ -594,26 +605,27 @@ var EngineFactory;
 					continue;
 
 				if(this.board.getPiece(f, r) == piece)
-					found.push(this.board.squares[f][r]);
+					found.push({ file: f, rank: r });
 			}
 		}
 		return found;
 	};
 
-	Engine.isSquareAttacked = function(square)
+	Engine.isSquareAttacked = function(file, rank)
 	{
-		if(!square.hasPiece())
+		if(!this.board.hasPiece(file, rank))
 			return false;
 
+		var squareName = FileMap.name(file, rank);
 		var covers;
-		if(PieceMap.isWhite(square.getPiece()))
+		if(PieceMap.isWhite(this.board.getPiece(file, rank)))
 			covers = this.getBlacksCoveredSquares();
 		else
 			covers = this.getWhitesCoveredSquares();
 
 		for(var i = 0; i < covers.length; i++)
 		{
-			if(covers[i] === square)
+			if(covers[i] == squareName)
 				return true;
 		}
 
@@ -627,7 +639,7 @@ var EngineFactory;
 
 		for(var i = 0; i < covers.length; i++)
 		{
-			if(covers[i].name == squareName)
+			if(covers[i] == squareName)
 				return true;
 		}
 
@@ -641,7 +653,7 @@ var EngineFactory;
 
 		for(var i = 0; i < covers.length; i++)
 		{
-			if(covers[i].name == squareName)
+			if(covers[i] == squareName)
 				return true;
 		}
 
@@ -700,7 +712,7 @@ var EngineFactory;
 		if(king.length == 0)
 			return false;
 
-		return this.isSquareAttacked(king[0]);
+		return this.isSquareAttacked(king[0].file, king[0].rank);
 	};
 
 	Engine.whiteInCheck = function()
@@ -709,7 +721,7 @@ var EngineFactory;
 		if(king.length == 0)
 			return false;
 
-		return this.isSquareAttacked(king[0]);
+		return this.isSquareAttacked(king[0].file, king[0].rank);
 	};
 
 	Engine.blackInCheckmate = function()
@@ -718,7 +730,7 @@ var EngineFactory;
 		if(king.length == 0)
 			return false;
 
-		return (this.isSquareAttacked(king[0])
+		return (this.isSquareAttacked(king[0].file, king[0].rank)
 				&& this.getValidMovesForSquare(king[0].file, king[0].rank).length == 0);
 	};
 
@@ -728,7 +740,7 @@ var EngineFactory;
 		if(king.length == 0)
 			return false;
 
-		return (this.isSquareAttacked(king[0])
+		return (this.isSquareAttacked(king[0].file, king[0].rank)
 				&& this.getValidMovesForSquare(king[0].file, king[0].rank).length == 0);
 	};
 
@@ -751,56 +763,52 @@ var EngineFactory;
 	Engine.move = function(notation, skipValidCheck)
 	{
 		var skipValidCheck = skipValidCheck === true?true:false;
-		var start = notation.substr(0,2);
-		var end = notation.substr(2,2);
+		var start = FileMap.coords(notation.substr(0,2));
+		var end = FileMap.coords(notation.substr(2,2));
 		// if there's anything left, it's a promotion
 		var promotion = '';
 		if(notation.length > 4)
 			promotion = notation.substr(4,1);
 
-		var startSquare = this.board.getSquare(start);
-
 		// can only move if we have something to move!
-		if(!startSquare || !startSquare.hasPiece())
+		if(!this.board.hasPiece(start.file, start.rank))
 			return false;
-
-		var endSquare = this.board.getSquare(end);
 
 		// valid move?
 		// not clear we should be checking this here...
 		// like maybe should have been done before hand?
 		if(	!skipValidCheck &&
-			!this.isValidMove(startSquare, endSquare))
+			!this.isValidMove(start, end))
 		{
 			// exception?
 			return false;
 		}
 
 		// actually move the piece
-		var piece = startSquare.getPiece();
-		startSquare.removePiece();
-		endSquare.setPiece(piece);
+		var piece = this.board.getPiece(start.file, start.rank);
+		this.board.removePiece(start.file, start.rank);
+		this.board.setPiece(piece, end.file, end.rank);
 
 		// castling?
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
-		if(isKing && Math.abs(startSquare.file - endSquare.file) == 2)
+		if(isKing && Math.abs(start.file - end.file) == 2)
 		{
 			var rookSquare;
 			var targetSquare;
-			if(endSquare.file > startSquare.file)
+			if(end.file > start.file)
 			{
-				rookSquare = this.board.squares[endSquare.file + 1][endSquare.rank];
-				targetSquare = this.board.squares[endSquare.file - 1][endSquare.rank];
+				rookSquare = { file: end.file + 1, rank: end.rank };
+				targetSquare = { file: end.file - 1, rank: end.rank };
 			}
 			else
 			{
-				rookSquare = this.board.squares[endSquare.file -2][endSquare.rank];
-				targetSquare = this.board.squares[endSquare.file + 1][endSquare.rank];
+				rookSquare = { file: end.file -2, rank: end.rank };
+				targetSquare = { file: end.file + 1, rank: end.rank };
 			}
 
-			var rook = rookSquare.getPiece();
-			rookSquare.removePiece();
-			targetSquare.setPiece(rook);
+			var rook = this.board.getPiece(rookSquare.file, rookSquare.rank);
+			this.board.removePiece(rookSquare.file, rookSquare.rank);
+			this.board.setPiece(rook, targetSquare.file, targetSquare.rank);
 		}
 
 		// update move number/color
@@ -1022,9 +1030,10 @@ var EngineFactory;
 		var diff = (end - start) / 1000;
 		//this.board.dump();
 		console.log(
-			(forWhite?'white':'black') + ' to move '
-			+';examined: ' + abExamined 
-			+ ' nodes in ' + diff + 's' 
+			(forWhite?'white':'black') + ' to move'
+			+'; examined: ' + abExamined 
+			+ ' nodes in ' + diff + 's '
+			+ '(' + Math.round(abExamined / diff) + 'n/s)'
 			+ '; best: ' + this.lastBestMove
 			+ ' (' + this.lastValue + ')');
 		return this.lastBestMove;
