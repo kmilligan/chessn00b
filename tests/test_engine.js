@@ -148,7 +148,7 @@ var testSimpleValidMoves = function()
 	equal(engine.getValidMovesForSquare(1,8).length, 2);
 
 	// king can't move into check! but can take the rook...
-	ok(engine.isSquareAttackedByBlack(engine.board.getSquare(2,3)));
+	ok(engine.isSquareAttackedByBlack(2,3));
 	equal(engine.getValidMovesForSquare(2,2).length, 5);
 
 	// ...unless it's protected

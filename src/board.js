@@ -75,6 +75,11 @@ var BoardFactory;
 		'h': '8'
 	};
 
+	FileMap.name = function(file, rank)
+	{
+		return FileMap[file] + rank; 
+	};
+
 	// color names
 	var ColorMap = 
 	{

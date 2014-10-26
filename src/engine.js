@@ -23,6 +23,7 @@ var EngineFactory;
 
 	var PieceMap = BoardFactory.getPieceMap();
 	var ColorMap = BoardFactory.getColorMap();
+	var FileMap = BoardFactory.getFileMap();
 
 	/**
 	* Object representing the engine;
@@ -103,7 +104,7 @@ var EngineFactory;
 				if(!this.board.hasPiece(f,r))
 					continue;
 
-				curr = this.board.squares[f][r].name;
+				curr = FileMap.name(f,r);
 				isWhite = PieceMap.isWhite(this.board.getPiece(f, r));
 
 				if(isWhite != forWhite)
@@ -122,26 +123,22 @@ var EngineFactory;
 		}
 	};
 
-	Engine.getValidMovesForSquare = function(fileOrSquare, rank)
+	Engine.getValidMovesForSquare = function(file, rank)
 	{
 		var result = [];
-		var square;
-		if(typeof fileOrSquare == 'object')
-			square = fileOrSquare;
-		else
-			square = this.board.squares[fileOrSquare][rank];
 
-		if(!square.hasPiece())
+		if(!this.board.hasPiece(file, rank))
 			return result;
 
-		var piece = square.getPiece();
+		var piece = this.board.getPiece(file, rank);
 		var isWhite = PieceMap.isWhite(piece);
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
 		var isPawn = (piece == 'p' || piece == 'P')?true:false;
+		var squareName = FileMap.name(file, rank);
 
 		var currFEN = this.getPositionFEN();
 		var postMoveEngine = EngineFactory.create();
-		var possible = this.getCoveredSquares(square);
+		var possible = this.getCoveredSquares(file, rank);
 
 		if(possible.length == 0)
 			return result;
@@ -162,7 +159,7 @@ var EngineFactory;
 
 			// can't make any move if it would cause check
 			postMoveEngine.setFEN(currFEN);
-			var notation = '' + square.name + possible[i].name;
+			var notation = '' + squareName + possible[i].name;
 			postMoveEngine.move(notation, true);
 			if((isWhite && postMoveEngine.whiteInCheck())
 				|| (!isWhite && postMoveEngine.blackInCheck()))
@@ -177,55 +174,55 @@ var EngineFactory;
 		{
 			if(isWhite)
 			{
-				if(	square.rank < 8 &&
-					!this.board.hasPiece(square.file,square.rank + 1))
+				if(	rank < 8 &&
+					!this.board.hasPiece(file,rank + 1))
 				{
 					// still have to make sure wouldn't cause check.
 					postMoveEngine.setFEN(currFEN);
-					var notation = '' + square.name 
-						+ this.board.squares[square.file][square.rank + 1].name;
+					var notation = '' + squareName 
+						+ FileMap.name(file, rank + 1);
 					postMoveEngine.move(notation, true);
 
 					if(!postMoveEngine.whiteInCheck())
-						result.push(this.board.squares[square.file][square.rank + 1]);
+						result.push(this.board.squares[file][rank + 1]);
 
-					if(square.rank == 2 &&
-						!this.board.hasPiece(square.file,square.rank + 2))
+					if( rank == 2 &&
+						!this.board.hasPiece(file,rank + 2))
 					{
 						postMoveEngine.setFEN(currFEN);
-						var notation = '' + square.name 
-							+ this.board.squares[square.file][square.rank + 2].name;
+						var notation = '' + squareName 
+							+ FileMap.name(file, rank + 2);
 						postMoveEngine.move(notation, true);
 
 						if(!postMoveEngine.whiteInCheck())
-							result.push(this.board.squares[square.file][square.rank + 2]);
+							result.push(this.board.squares[file][rank + 2]);
 					}
 				}
 			}
 			else
 			{
-				if(	square.rank > 1 &&
-					!this.board.hasPiece(square.file, square.rank - 1))
+				if(	rank > 1 &&
+					!this.board.hasPiece(file, rank - 1))
 				{
 					// still have to make sure wouldn't cause check.
 					postMoveEngine.setFEN(currFEN);
-					var notation = '' + square.name 
-						+ this.board.squares[square.file][square.rank - 1].name;
+					var notation = '' + squareName 
+						+ FileMap.name(file, rank - 1);
 					postMoveEngine.move(notation, true);
 
 					if(!postMoveEngine.blackInCheck())
-						result.push(this.board.squares[square.file][square.rank - 1]);
+						result.push(this.board.squares[file][rank - 1]);
 
-					if(square.rank == 7 &&
-						!this.board.hasPiece(square.file, square.rank - 2))
+					if( rank == 7 &&
+						!this.board.hasPiece(file, rank - 2))
 					{
 						postMoveEngine.setFEN(currFEN);
-						var notation = '' + square.name 
-							+ this.board.squares[square.file][square.rank - 2].name;
+						var notation = '' + squareName 
+							+ FileMap.name(file, rank - 2);
 						postMoveEngine.move(notation, true);
 
 						if(!postMoveEngine.blackInCheck())
-							result.push(this.board.squares[square.file][square.rank - 2]);
+							result.push(this.board.squares[file][rank - 2]);
 					}
 				}
 			}
@@ -238,48 +235,47 @@ var EngineFactory;
 				&& !this.whiteInCheck())
 			{
 				if(this.board.castlingOptions.indexOf('K') >= 0
-					&& !this.board.hasPiece(square.file + 1,square.rank)
-					&& !this.isSquareAttackedByBlack(square.file + 1, square.rank)
-					&& !this.board.hasPiece(square.file + 2, square.rank)
-					&& !this.isSquareAttackedByBlack(square.file + 2, square.rank)
+					&& !this.board.hasPiece(file + 1,rank)
+					&& !this.isSquareAttackedByBlack(file + 1, rank)
+					&& !this.board.hasPiece(file + 2, rank)
+					&& !this.isSquareAttackedByBlack(file + 2, rank)
 					)
 				{
-					result.push(this.board.squares[square.file + 2][square.rank]);
+					result.push(this.board.squares[file + 2][rank]);
 				}
 				
 				if(this.board.castlingOptions.indexOf('Q') >= 0
-					&& !this.board.hasPiece(square.file - 1, square.rank)
-					&& !this.isSquareAttackedByBlack(square.file - 1, square.rank)
-					&& !this.board.hasPiece(square.file - 2, square.rank)
-					&& !this.isSquareAttackedByBlack(square.file - 2, square.rank)
+					&& !this.board.hasPiece(file - 1, rank)
+					&& !this.isSquareAttackedByBlack(file - 1, rank)
+					&& !this.board.hasPiece(file - 2, rank)
+					&& !this.isSquareAttackedByBlack(file - 2, rank)
 					)
 				{
-					result.push(this.board.squares[square.file - 2][square.rank]);
+					result.push(this.board.squares[file - 2][rank]);
 				}
 			}
 			else if(!isWhite
 				&& !this.blackInCheck())
 			{
 				if(this.board.castlingOptions.indexOf('k') >= 0
-					&& !this.board.hasPiece(square.file + 1, square.rank)
-					&& !this.isSquareAttackedByWhite(square.file + 1, square.rank)
-					&& !this.board.hasPiece(square.file + 2, square.rank)
-					&& !this.isSquareAttackedByWhite(square.file + 2, square.rank)
+					&& !this.board.hasPiece(file + 1, rank)
+					&& !this.isSquareAttackedByWhite(file + 1, rank)
+					&& !this.board.hasPiece(file + 2, rank)
+					&& !this.isSquareAttackedByWhite(file + 2, rank)
 					)
 				{
-					result.push(this.board.squares[square.file + 2][square.rank]);
+					result.push(this.board.squares[file + 2][rank]);
 				}
 
 				if(this.board.castlingOptions.indexOf('q') >= 0
-					&& !this.board.hasPiece(square.file - 1, square.rank)
-					&& !this.isSquareAttackedByWhite(square.file - 1, square.rank)
-					&& !this.board.hasPiece(square.file - 2, square.rank)
-					&& !this.isSquareAttackedByWhite(square.file - 2, square.rank)
+					&& !this.board.hasPiece(file - 1, rank)
+					&& !this.isSquareAttackedByWhite(file - 1, rank)
+					&& !this.board.hasPiece(file - 2, rank)
+					&& !this.isSquareAttackedByWhite(file - 2, rank)
 					)
 				{
-					result.push(this.board.squares[square.file - 2][square.rank]);
+					result.push(this.board.squares[file - 2][rank]);
 				}
-
 			}
 		}
 
@@ -307,7 +303,7 @@ var EngineFactory;
 		if(PieceMap.getColor(start.getPiece()) != this.board.getColorToMove())
 			return false;
 
-		var valids = this.getValidMovesForSquare(start);
+		var valids = this.getValidMovesForSquare(start.file, start.rank);
 		for(var i = 0; i < valids.length; i++)
 		{
 			if(valids[i] === end)
@@ -624,38 +620,28 @@ var EngineFactory;
 		return false;
 	};
 
-	Engine.isSquareAttackedByWhite = function(fileOrSquare, rank)
+	Engine.isSquareAttackedByWhite = function(file, rank)
 	{
-		var square;
-		if(typeof fileOrSquare == 'object')
-			square = fileOrSquare;
-		else
-			square = this.board.squares[fileOrSquare][rank];
-
+		var squareName = FileMap.name(file, rank);
 		var covers = this.getWhitesCoveredSquares();
 
 		for(var i = 0; i < covers.length; i++)
 		{
-			if(covers[i] === square)
+			if(covers[i].name == squareName)
 				return true;
 		}
 
 		return false;
 	};
 
-	Engine.isSquareAttackedByBlack = function(fileOrSquare, rank)
+	Engine.isSquareAttackedByBlack = function(file, rank)
 	{
-		var square;
-		if(typeof fileOrSquare == 'object')
-			square = fileOrSquare;
-		else
-			square = this.board.squares[fileOrSquare][rank];
-
+		var squareName = FileMap.name(file, rank);
 		var covers = this.getBlacksCoveredSquares();
 
 		for(var i = 0; i < covers.length; i++)
 		{
-			if(covers[i] === square)
+			if(covers[i].name == squareName)
 				return true;
 		}
 
@@ -733,7 +719,7 @@ var EngineFactory;
 			return false;
 
 		return (this.isSquareAttacked(king[0])
-				&& this.getValidMovesForSquare(king[0]).length == 0);
+				&& this.getValidMovesForSquare(king[0].file, king[0].rank).length == 0);
 	};
 
 	Engine.whiteInCheckmate = function()
@@ -743,7 +729,7 @@ var EngineFactory;
 			return false;
 
 		return (this.isSquareAttacked(king[0])
-				&& this.getValidMovesForSquare(king[0]).length == 0);
+				&& this.getValidMovesForSquare(king[0].file, king[0].rank).length == 0);
 	};
 
 	Engine.moves = function(moves)
@@ -963,7 +949,7 @@ var EngineFactory;
 
 				for(var i = 0; i < moves.length; i++)
 				{
-					var notation = '' + this.board.squares[f][r].name + moves[i].name;
+					var notation = '' + FileMap.name(f, r) + moves[i].name;
 					
 					// found checkmate. all done.
 					var val = this.evaluateMove(notation);
