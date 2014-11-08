@@ -13,7 +13,7 @@ fi
 
 # combine our js into one file first...
 SOURCE_PATH=/tmp/$PROJECT.js
-cat *.js > $SOURCE_PATH
+cat board_10x12.js display.js  engine.js > $SOURCE_PATH
 
 if [ ! -f "$SOURCE_PATH" ];
 then

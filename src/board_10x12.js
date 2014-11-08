@@ -1,5 +1,6 @@
 /**
 * Base classes for our board, square, etc.
+* This version represents the board with a 10x12 single-dim array.
 *
 *@author Kurt Milligan
 */
@@ -91,64 +92,8 @@ var BoardFactory;
 	// color names
 	var ColorMap = 
 	{
-		white: 1,
-		black: -1
-	};
-
-	/**
-	* Object representing a specific, single square on the board.
-	*/
-	var Square = {};
-
-	/**
-	* Setup; determine our color, name, etc
-	*/
-	Square.init = function(file, rank)
-	{
-		this.file = file;
-		this.rank = rank;
-		this.color = 0;
-		this.name = FileMap[file] + rank; 
-		this.piece = '';
-
-		// figure out our color
-		var fileEven = (file % 2 == 0);
-		var fileOdd = !fileEven;
-		var rankEven = (rank % 2 == 0);
-		var rankOdd = !rankEven;
-		if((fileOdd && rankEven)
-			|| (fileEven && rankOdd))
-			this.color = 1;
-	
-		return this;
-	};
-
-	Square.setPiece = function(piece)
-	{
-		if(PieceMap[piece] === 'undefined')
-			throw new Error('Invalid piece');
-
-		this.piece = piece;
-	};
-
-	Square.removePiece = function()
-	{
-		this.piece = '';
-	};
-
-	Square.hasPiece = function()
-	{
-		return (this.piece == ''?false:true);
-	};
-
-	Square.getPiece = function()
-	{
-		return this.piece;
-	};
-
-	Square.isWhite = function()
-	{
-		return (this.color == 1?true:false);
+		white: 8,
+		black: 0 
 	};
 
 	/**
@@ -164,18 +109,35 @@ var BoardFactory;
 		this.halfMoveClock = 0;
 		this.fullMoveNumber = 0;
 
-		// initialize our Squares
-		this.squares = [];
-		for(var f = 1; f < 9; f++)
-		{
-			for(var r = 1; r < 9; r++)
-			{
-				// allocate our array
-				if(r == 1)
-					this.squares[f] = [];
-				this.squares[f][r] = Object.create(Square).init(f, r);
-			}
-		}
+		this.squares = [
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+						];
+
+		this.squareColors = [
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+						];
 
 		return this;
 	};
@@ -252,24 +214,45 @@ var BoardFactory;
 		}
 	};
 
+	// get our internal array position
+	Board.ap = function(file, rank)
+	{
+		return ((10 - parseInt(rank,10)) * 10) + parseInt(file,10);
+	};
+
+	// translate ap to notation
+	Board.apToName = function(ap)
+	{
+		var file = ap % 10;
+		var rank = 10 - Math.floor(ap / 10);
+
+		return FileMap.name(file, rank);
+	};
+
 	Board.setPiece = function(piece, file, rank)
 	{
-		this.squares[file][rank].setPiece(piece);
+		this.squares[this.ap(file, rank)] = piece;
 	};
 	
 	Board.removePiece = function(file, rank)
 	{
-		this.squares[file][rank].removePiece();
+		this.squares[this.ap(file, rank)] = 0;
 	};
 
 	Board.hasPiece = function(file, rank)
 	{
-		return this.squares[file][rank].hasPiece(); 
+		var ap;
+		if(typeof rank === 'undefined')
+			ap = file;
+		else
+			ap = this.ap(file, rank);
+
+		return (typeof this.squares[ap] === 'string'?true:false);
 	};
 
 	Board.getPiece = function(file, rank)
 	{
-		return this.squares[file][rank].getPiece(); 
+		return this.squares[this.ap(file, rank)]; 
 	};
 
 	Board.getSquareColor = function(file, rank)
@@ -281,8 +264,8 @@ var BoardFactory;
 			rank = file.substr(1,1);
 			file = FileMap[file.substr(0,1)];
 		}
-
-		return this.squares[file][rank].isWhite()?ColorMap.white:ColorMap.black;
+		//console.log(file + ',' + rank + ':' + this.ap(file, rank));
+		return this.squareColors[this.ap(file, rank)];
 	};
 
 	Board.getCoveredSquares = function(file, rank)
@@ -332,41 +315,32 @@ var BoardFactory;
 
 	Board.getStraightOptions = function(file,rank,limit)
 	{
-		// keep track when we run into something in each direction
-		var stop1 = false;
-		var stop2 = false;
-		var stop3 = false;
-		var stop4 = false;
-		//console.log(FileMap[file] + rank);
 		var options = [];
-		for(var i = 1; i <= limit; i++)
+		var directions = [-1,-10,1,10];
+		var dist, direction;
+		var oap = this.ap(file,rank);
+		var cap; // current array position
+		for(var i = 0; i < directions.length; i++)
 		{
-			if(rank + i < 9 && !stop1)
+			direction = directions[i];
+			cap = oap;
+			dist = 0;
+			while(dist < limit)
 			{
-				options.push(FileMap.name(file, rank + i));
-				if(this.hasPiece(file, rank + i))
-					stop1 = true;
-			}
+				cap += direction;
 
-			if(file + i < 9 && !stop2)
-			{
-				options.push(FileMap.name(file + i, rank));
-				if(this.hasPiece(file + i, rank))
-					stop2 = true;
-			}
+				// off the edge?
+				if(this.squares[cap] < 0)
+					break;
 
-			if(rank - i > 0 && !stop3)
-			{
-				options.push(FileMap.name(file, rank - i));
-				if(this.hasPiece(file, rank - i))
-					stop3 = true;
-			}
+				// add it to the list
+				options.push(this.apToName(cap));
 
-			if(file - i > 0 && !stop4)
-			{
-				options.push(FileMap.name(file - i, rank));
-				if(this.hasPiece(file - i, rank))
-					stop4 = true;
+				// have a piece?
+				if(this.hasPiece(cap))
+					break;
+
+				dist++;
 			}
 		}
 
@@ -375,53 +349,32 @@ var BoardFactory;
 
 	Board.getDiagonalOptions = function(file,rank,limit)
 	{
-		// keep track when we run into something in each direction
-		var stop1 = false;
-		var stop2 = false;
-		var stop3 = false;
-		var stop4 = false;
-		var currF, currR;
 		var options = [];
-		for(var i = 1; i <= limit; i++)
+		var directions = [-11,-9,9,11];
+		var dist, direction;
+		var oap = this.ap(file,rank);
+		var cap; // current array position
+		for(var i = 0; i < directions.length; i++)
 		{
-			if(rank + i < 9)
+			direction = directions[i];
+			cap = oap;
+			dist = 0;
+			while(dist < limit)
 			{
-				currR = rank + i;
-				if(file + i < 9 && !stop1)
-				{
-					currF = file + i;
-					options.push(FileMap.name(currF, currR));
-					if(this.hasPiece(currF, currR))
-						stop1 = true;
-				}
+				cap += direction;
 
-				if(file - i > 0 && !stop2)
-				{
-					currF = file - i;
-					options.push(FileMap.name(currF, currR));
-					if(this.hasPiece(currF, currR))
-						stop2 = true;
-				}
-			}
+				// off the edge?
+				if(this.squares[cap] < 0)
+					break;
 
-			if(rank - i > 0)
-			{
-				currR = rank - i;
-				if(file + i < 9 && !stop3)
-				{
-					currF = file + i;
-					options.push(FileMap.name(currF, currR));
-					if(this.hasPiece(currF, currR))
-						stop3 = true;
-				}
+				// add it to the list
+				options.push(this.apToName(cap));
 
-				if(file - i > 0 && !stop4)
-				{
-					currF = file - i;
-					options.push(FileMap.name(currF, currR));
-					if(this.hasPiece(currF, currR))
-						stop4 = true;
-				}
+				// have a piece?
+				if(this.hasPiece(cap))
+					break;
+
+				dist++;
 			}
 		}
 
@@ -431,42 +384,21 @@ var BoardFactory;
 	Board.getKnightOptions = function(file,rank)
 	{
 		var options = [];
-		// check to the left...
-		if(file - 1 > 0)
+		var directions = [-21,-19,-8,12,21,19,8,-12];
+		var direction;
+		var oap = this.ap(file,rank);
+		var cap; // current array position
+		for(var i = 0; i < directions.length; i++)
 		{
-			if(rank + 2 < 9)
-				options.push(FileMap.name(file - 1, rank + 2));
+			direction = directions[i];
+			cap = oap + direction;
 
-			if(rank - 2 > 0)
-				options.push(FileMap.name(file - 1, rank - 2));
+			// off the edge?
+			if(this.squares[cap] < 0)
+				continue;
 
-			if(file - 2 > 0)
-			{
-				if(rank + 1 < 9)
-					options.push(FileMap.name(file - 2, rank + 1));
-
-				if(rank - 1 > 0)
-					options.push(FileMap.name(file - 2, rank - 1));
-			}
-		}
-
-		// ...now to the right
-		if(file + 1 < 9)
-		{
-			if(rank + 2 < 9)
-				options.push(FileMap.name(file + 1, rank + 2));
-
-			if(rank - 2 > 0)
-				options.push(FileMap.name(file + 1, rank - 2));
-
-			if(file + 2 < 9)
-			{
-				if(rank + 1 < 9)
-					options.push(FileMap.name(file + 2, rank + 1));
-
-				if(rank - 1 > 0)
-					options.push(FileMap.name(file + 2, rank - 1));
-			}
+			// add it to the list
+			options.push(this.apToName(cap));
 		}
 
 		return options;
@@ -475,29 +407,25 @@ var BoardFactory;
 	Board.getPawnOptions = function(file,rank)
 	{
 		var options = [];
-
-		// need the color for direction
 		if(PieceMap.isWhite(this.getPiece(file, rank)))
-		{
-			if(rank < 8)
-			{
-				if(file > 1)
-					options.push(FileMap.name(file - 1, rank + 1));
-
-				if(file < 8)
-					options.push(FileMap.name(file + 1, rank + 1));
-			}
-		}
+			var directions = [-11,-9];
 		else
+			var directions = [11,9];
+		
+		var direction;
+		var oap = this.ap(file,rank);
+		var cap; // current array position
+		for(var i = 0; i < directions.length; i++)
 		{
-			if(rank > 1)
-			{
-				if(file > 1)
-					options.push(FileMap.name(file - 1, rank - 1));
+			direction = directions[i];
+			cap = oap + direction;
 
-				if(file < 8)
-					options.push(FileMap.name(file + 1, rank - 1));
-			}
+			// off the edge?
+			if(this.squares[cap] < 0)
+				continue;
+
+			// add it to the list
+			options.push(this.apToName(cap));
 		}
 
 		return options;
@@ -512,10 +440,10 @@ var BoardFactory;
 			var rankOut = '|';
 			for(var f = 1; f < 9; f++)
 			{
-				if(!this.squares[f][r].hasPiece())
+				if(!this.hasPiece(f,r))
 					rankOut += ' ';
 				else
-					rankOut += this.squares[f][r].getPiece();
+					rankOut += this.getPiece(f,r);
 
 				rankOut += '|';
 			}

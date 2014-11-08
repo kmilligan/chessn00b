@@ -1,5 +1,5 @@
 // tests for our engine (and engine, by extension)
-$.getScript('../src/board.js', function()
+$.getScript('../src/board_10x12.js', function()
 {
 	$.getScript('../src/engine.js', function()
 	{
@@ -26,20 +26,21 @@ $.getScript('../src/board.js', function()
 var testCreateBoard = function()
 {
 	var board = BoardFactory.create();
-
+	var colorMap = BoardFactory.getColorMap();
+	
 	// a8, h1 are white
-	ok(board.getSquare(1,8).isWhite());
-	ok(board.getSquare(8,1).isWhite());
+	equal(board.getSquareColor(1,8), colorMap.white);
+	equal(board.getSquareColor(8,1), colorMap.white);
 
 	// a1, h8 are black
-	ok(!board.getSquare(1,1).isWhite());
-	ok(!board.getSquare(8,8).isWhite());
+	equal(board.getSquareColor(1,1), colorMap.black);
+	equal(board.getSquareColor(8,8), colorMap.black);
 
 	// try using algebraic
-	ok(board.getSquare('a8').isWhite());
-	ok(board.getSquare('h1').isWhite());
-	ok(!board.getSquare('a1').isWhite());
-	ok(!board.getSquare('h8').isWhite());
+	equal(board.getSquareColor('a8'), colorMap.white);
+	equal(board.getSquareColor('h1'), colorMap.white);
+	equal(board.getSquareColor('a1'), colorMap.black);
+	equal(board.getSquareColor('h8'), colorMap.black);
 };
 
 var testFEN = function()
@@ -50,8 +51,8 @@ var testFEN = function()
 	var fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 	
 	engine.setFEN(fen);
-	equal(engine.board.getSquare(4,1).getPiece(), 'Q');
-	equal(engine.board.getSquare(4,8).getPiece(), 'q');
+	equal(engine.board.getPiece(4,1), 'Q');
+	equal(engine.board.getPiece(4,8), 'q');
 	equal(engine.board.getColorToMove(), BoardFactory.getColorMap().white);
 
 	equal(engine.getPositionFEN(), 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
@@ -61,8 +62,8 @@ var testSimpleCoverage = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('k7/8/8/8/8/8/1K6/8 w - 0 1');	
-	equal(engine.board.getSquare(1,8).getPiece(), 'k');
-	equal(engine.board.getSquare(2,2).getPiece(), 'K');
+	equal(engine.board.getPiece(1,8), 'k');
+	equal(engine.board.getPiece(2,2), 'K');
 
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 8);
@@ -71,8 +72,8 @@ var testSimpleCoverage = function()
 	equal(coverageBlack.length, 3);
 	
 	engine.setFEN('q7/8/8/8/8/8/1Q6/8 w - 0 1');	
-	equal(engine.board.getSquare(1,8).getPiece(), 'q');
-	equal(engine.board.getSquare(2,2).getPiece(), 'Q');
+	equal(engine.board.getPiece(1,8), 'q');
+	equal(engine.board.getPiece(2,2), 'Q');
 
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 23);
@@ -110,8 +111,8 @@ var testLessSimpleCoverage = function()
 	// king coverage shouldn't change, but others should add
 	var engine = EngineFactory.create();
 	engine.setFEN('kp6/8/8/8/8/8/PK6/8 w - - 0 1');	
-	equal(engine.board.getSquare(1,8).getPiece(), 'k');
-	equal(engine.board.getSquare(2,2).getPiece(), 'K');
+	equal(engine.board.getPiece(1,8), 'k');
+	equal(engine.board.getPiece(2,2), 'K');
 
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 9);
@@ -121,8 +122,8 @@ var testLessSimpleCoverage = function()
 
 	// Queens are now blocked, reducing scope
 	engine.setFEN('qp6/8/8/8/8/1P6/1QP5/8 w - - 0 1');	
-	equal(engine.board.getSquare(1,8).getPiece(), 'q');
-	equal(engine.board.getSquare(2,2).getPiece(), 'Q');
+	equal(engine.board.getPiece(1,8), 'q');
+	equal(engine.board.getPiece(2,2), 'Q');
 
 	var coverageWhite = engine.getWhitesCoveredSquares();
 	equal(coverageWhite.length, 17);
@@ -142,8 +143,8 @@ var testSimpleValidMoves = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('kp6/8/8/8/8/r7/PK6/8 w - - 0 1');	
-	equal(engine.board.getSquare(1,8).getPiece(), 'k');
-	equal(engine.board.getSquare(2,2).getPiece(), 'K');
+	equal(engine.board.getPiece(1,8), 'k');
+	equal(engine.board.getPiece(2,2), 'K');
 
 	equal(engine.getValidMovesForSquare(1,8).length, 2);
 

@@ -55,6 +55,8 @@
 
 	// map pieces to unicode
 	var PieceMap = BoardFactory.getPieceMap();
+	var ColorMap = BoardFactory.getColorMap();
+	var FileMap = BoardFactory.getFileMap();
 
 	var OpeningBook = 
 	{
@@ -76,22 +78,10 @@
 		this.square = square;
 		this.element = $('<div class="chessn00b-square">&nbsp;</div>');
 		this.element[0].displaySquare = this;
-		this.element.attr('rel', this.square.name);
-		this.element.addClass(this.square.color?'chessn00b-light-square':'chessn00b-dark-square');
+		this.element.attr('rel', square.name);
+		this.element.addClass(this.square.color == ColorMap.white?'chessn00b-light-square':'chessn00b-dark-square');
 
 		return this;
-	};
-
-	// match our view to the underlying square
-	DisplaySquare.update = function()
-	{
-		if(!this.square.hasPiece())
-		{
-			this.element.html('&nbsp;');
-			return;
-		}
-
-		this.element.html(PieceMap[this.square.getPiece()]);
 	};
 
 	DisplaySquare.lite = function()
@@ -148,7 +138,13 @@
 				if(r == 1)
 					this.displaySquares[f] = [];
 
-				this.displaySquares[f][r] = Object.create(DisplaySquare).init(this.board.squares[f][r]);
+				this.displaySquares[f][r] = Object.create(DisplaySquare).init(
+				{ 
+					file: f, 
+					rank: r,
+					color: this.board.getSquareColor(f,r),
+					name: FileMap.name(f,r)
+				});
 			}
 		}
 
@@ -333,6 +329,7 @@
 	{
 		this.board.setFEN(fen);
 		this.update();
+		this.board.dump();
 	};
 
 	DisplayBoard.getFEN = function()
@@ -346,7 +343,10 @@
 		{
 			for(var r = 1; r < 9; r++)
 			{
-				this.displaySquares[f][r].update();
+				if(!this.board.hasPiece(f, r))
+					this.displaySquares[f][r].element.html('&nbsp;');
+
+				this.displaySquares[f][r].element.html(PieceMap[this.board.getPiece(f, r)]);
 			}
 		}
 	};
