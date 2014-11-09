@@ -502,7 +502,7 @@ var EngineFactory;
 			return false;
 
 		return (this.isSquareAttacked(king[0].file, king[0].rank)
-				&& this.getValidMovesForSquare(king[0].file, king[0].rank).length == 0);
+				&& this.getValidMovesForBlack().length == 0);
 	};
 
 	Engine.whiteInCheckmate = function()
@@ -512,7 +512,7 @@ var EngineFactory;
 			return false;
 
 		return (this.isSquareAttacked(king[0].file, king[0].rank)
-				&& this.getValidMovesForSquare(king[0].file, king[0].rank).length == 0);
+				&& this.getValidMovesForWhite().length == 0);
 	};
 
 	Engine.moves = function(moves)

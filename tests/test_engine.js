@@ -245,6 +245,12 @@ var testInCheckmate = function()
 	engine.setFEN('8/8/8/8/1k6/2q5/PK6/1R6 w - - 0 1');	
 	equal(engine.getValidMovesForSquare(2,2).length, 0);
 	ok(engine.whiteInCheckmate());	
+
+	// not checkmate because the attacker can be taken
+	engine.setFEN('8/8/8/8/1k6/8/B4PPP/1r4K1 w - - 0 1');	
+	equal(engine.getValidMovesForSquare(2,2).length, 0);
+	equal(engine.getValidMovesForWhite().length, 1);
+	ok(!engine.whiteInCheckmate());	
 };
 
 var testCastling = function()
