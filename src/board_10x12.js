@@ -109,37 +109,50 @@ var BoardFactory;
 		this.halfMoveClock = 0;
 		this.fullMoveNumber = 0;
 
-		this.squares = [
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1
-						];
+		this.squares = 
+		[
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1, 0, 0, 0, 0, 0, 0, 0, 0,-1,
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+		];
 
-		this.squareColors = [
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
--1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
--1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
--1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
--1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
--1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
--1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
--1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
--1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
--1,-1,-1,-1,-1,-1,-1,-1,-1,-1
-						];
+		this.squareColors = 
+		[
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+			-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+			-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+			-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+			-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+			-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+			-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+			-1, 8, 0, 8, 0, 8, 0, 8, 0,-1,
+			-1, 0, 8, 0, 8, 0, 8, 0, 8,-1,
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+			-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+		];
 
 		return this;
+	};
+
+	// this is *significantly* faster than using setFEN
+	Board.copyFrom = function(board)
+	{
+		this.squares = board.squares.slice();
+		this.colorToMove = board.colorToMove;
+		this.castlingOptions = board.castlingOptions;
+		this.enpassantTarget = board.enpassantTarget;
+		this.haveMoveClock = board.halfMoveClock;
+		this.fullMoveNumber = board.fullMoveNumber;
 	};
 
 	Board.setFEN = function(fen)
@@ -231,7 +244,9 @@ var BoardFactory;
 
 	Board.setPiece = function(piece, file, rank)
 	{
+		//console.log('setting ' + file + rank + ' to ' + piece);
 		this.squares[this.ap(file, rank)] = piece;
+		//this.squares[this.ap(file, rank)] = piece.charCodeAt(0);
 	};
 	
 	Board.removePiece = function(file, rank)
@@ -248,11 +263,13 @@ var BoardFactory;
 			ap = this.ap(file, rank);
 
 		return (typeof this.squares[ap] === 'string'?true:false);
+		//return (this.squares[ap] > 40?true:false);
 	};
 
 	Board.getPiece = function(file, rank)
 	{
 		return this.squares[this.ap(file, rank)]; 
+		//return String.fromCharCode(this.squares[this.ap(file, rank)]); 
 	};
 
 	Board.getSquareColor = function(file, rank)

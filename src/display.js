@@ -329,7 +329,7 @@
 	{
 		this.board.setFEN(fen);
 		this.update();
-		this.board.dump();
+		//this.board.dump();
 	};
 
 	DisplayBoard.getFEN = function()

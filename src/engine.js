@@ -164,7 +164,7 @@ var EngineFactory;
 			}
 
 			// can't make any move if it would cause check
-			postMoveEngine.setFEN(currFEN);
+			postMoveEngine.setFromBoard(this.board);
 			var notation = '' + squareName + possibles[i];
 			postMoveEngine.move(notation, true);
 			if((isWhite && postMoveEngine.whiteInCheck())
@@ -184,7 +184,7 @@ var EngineFactory;
 					!this.board.hasPiece(file,rank + 1))
 				{
 					// still have to make sure wouldn't cause check.
-					postMoveEngine.setFEN(currFEN);
+					postMoveEngine.setFromBoard(this.board);
 					var notation = '' + squareName 
 						+ FileMap.name(file, rank + 1);
 					postMoveEngine.move(notation, true);
@@ -195,7 +195,7 @@ var EngineFactory;
 					if( rank == 2 &&
 						!this.board.hasPiece(file,rank + 2))
 					{
-						postMoveEngine.setFEN(currFEN);
+						postMoveEngine.setFromBoard(this.board);
 						var notation = '' + squareName 
 							+ FileMap.name(file, rank + 2);
 						postMoveEngine.move(notation, true);
@@ -211,7 +211,7 @@ var EngineFactory;
 					!this.board.hasPiece(file, rank - 1))
 				{
 					// still have to make sure wouldn't cause check.
-					postMoveEngine.setFEN(currFEN);
+					postMoveEngine.setFromBoard(this.board);
 					var notation = '' + squareName 
 						+ FileMap.name(file, rank - 1);
 					postMoveEngine.move(notation, true);
@@ -222,7 +222,7 @@ var EngineFactory;
 					if( rank == 7 &&
 						!this.board.hasPiece(file, rank - 2))
 					{
-						postMoveEngine.setFEN(currFEN);
+						postMoveEngine.setFromBoard(this.board);
 						var notation = '' + squareName 
 							+ FileMap.name(file, rank - 2);
 						postMoveEngine.move(notation, true);
@@ -475,6 +475,12 @@ var EngineFactory;
 	{
 		this.resetCaches();
 		this.board.setFEN(fen);
+	};
+
+	Engine.setFromBoard = function(board)
+	{
+		this.resetCaches();
+		this.board.copyFrom(board);
 	};
 
 	Engine.blackInCheck = function()
@@ -790,15 +796,9 @@ var EngineFactory;
 
 	Engine.clone = function()
 	{
-		// this isn't a true, separate clone...
 		var board = EngineFactory.create();
-		board.setFEN(this.getPositionFEN()
-			+ ' '
-			+ (this.board.getColorToMove() == ColorMap.white?'w':'b'));
-		// doesn't seem to work, not sure why
-		//var board = jQuery.extend(true, {}, this);
-		// doesn't work for complex objects
-		//var board = JSON.parse(JSON.stringify(this));
+		board.setFromBoard(board.board);
+
 		return board;
 	};
 	
@@ -853,7 +853,7 @@ var EngineFactory;
 			moves = this.getValidMovesForWhite();
 			for(var i = 0; i < moves.length; i++)
 			{
-				board.setFEN(currFEN);
+				board.setFromBoard(this.board);
 				board.move(moves[i]);
 				curr = a;
 
@@ -886,7 +886,7 @@ var EngineFactory;
 			moves = this.getValidMovesForBlack();
 			for(var i = 0; i < moves.length; i++)
 			{
-				board.setFEN(currFEN);
+				board.setFromBoard(this.board);
 				board.move(moves[i]);
 				curr = b;
 

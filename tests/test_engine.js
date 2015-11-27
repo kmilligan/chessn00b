@@ -1,4 +1,5 @@
 // tests for our engine (and engine, by extension)
+//$.getScript('../src/board.js', function()
 $.getScript('../src/board_10x12.js', function()
 {
 	$.getScript('../src/engine.js', function()

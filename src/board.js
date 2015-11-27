@@ -180,6 +180,24 @@ var BoardFactory;
 		return this;
 	};
 
+	Board.copyFrom = function(board)
+	{
+		for(var f = 1; f < 9; f++)
+		{
+			for(var r = 1; r < 9; r++)
+			{
+				this.squares[f][r].setPiece(
+					board.getPiece(f,r));
+			}
+		}
+
+		this.colorToMove = board.colorToMove;
+		this.castlingOptions = board.castlingOptions;
+		this.enpassantTarget = board.enpassantTarget;
+		this.haveMoveClock = board.halfMoveClock;
+		this.fullMoveNumber = board.fullMoveNumber;
+	};
+
 	Board.setFEN = function(fen)
 	{
 		var parts = fen.split(' ');
