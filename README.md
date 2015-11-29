@@ -1,9 +1,20 @@
 chessn00b
 =========
 
-A simplistic JavaScript chess engine (plus display board).
+A simplistic JavaScript chess engine plus a FEN-compatible display board.
 
 Mostly a "just to see if I can" / "interesting challenge" project.
+
+WTF is FEN?
+-----------
+
+[FEN](http://en.wikipedia.org/wiki/FEN) is a method of describing a given chess position.
+For example:
+
+    rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+
+describes the starting position for classical chess.
+
 
 Usage
 -----
@@ -18,6 +29,15 @@ The display board has a jQuery plugin hook, so assuming you've already included 
             $('.board').chessn00b();
         });
     </script>
+
+Options
+-------
+
+There are only two at the moment:
+
+**fen** - provide the initial board state in FEN. Defaults to standard chess opening position.
+
+**playGame** - boolean; should the engine attempt to play if a piece is moved? Defaults to true.
 
 Limitations
 -----------
