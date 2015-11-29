@@ -190,7 +190,19 @@ var EngineFactory;
 					postMoveEngine.move(notation, true);
 
 					if(!postMoveEngine.whiteInCheck())
-						result.push(FileMap.name(file, rank + 1));
+					{
+						if(rank < 7)
+							result.push(FileMap.name(file, rank + 1));
+						else
+						{
+							// promotion options
+							var baseName = FileMap.name(file, rank + 1);
+							result.push(baseName + 'Q');
+							result.push(baseName + 'R');
+							result.push(baseName + 'N');
+							result.push(baseName + 'B');
+						}
+					}
 
 					if( rank == 2 &&
 						!this.board.hasPiece(file,rank + 2))
@@ -217,7 +229,19 @@ var EngineFactory;
 					postMoveEngine.move(notation, true);
 
 					if(!postMoveEngine.blackInCheck())
-						result.push(FileMap.name(file, rank - 1));
+					{
+						if(rank > 2)
+							result.push(FileMap.name(file, rank - 1));
+						else
+						{
+							// promotion options
+							var baseName = FileMap.name(file, rank - 1);
+							result.push(baseName + 'q');
+							result.push(baseName + 'r');
+							result.push(baseName + 'n');
+							result.push(baseName + 'b');
+						}					
+					}
 
 					if( rank == 7 &&
 						!this.board.hasPiece(file, rank - 2))
@@ -288,6 +312,23 @@ var EngineFactory;
 		return result;
 	};
 
+	// doesnt do a full check; just enough so the display 
+	// knows to show promotion options
+	Engine.isPromotionPossible = function(move)
+	{
+		var start = FileMap.coords(move.substr(0,2));
+
+		if(this.board.hasPiece(start.file, start.rank))
+		{
+			var piece = this.board.getPiece(start.file, start.rank);
+			if((piece == 'p' && start.rank == 2)
+				|| (piece == 'P' && start.rank == 7))
+				return true; 
+		}
+
+		return false;
+	}
+
 	// expecting square objects for start & end
 	// or a "move" notation
 	Engine.isValidMove = function(startOrMove, end)
@@ -295,15 +336,14 @@ var EngineFactory;
 		var start;
 		var endName;
 		if(typeof startOrMove == 'object')
-		{
 			start = startOrMove;
-			endName = FileMap.name(end.file, end.rank);
-		}
 		else
-		{
 			start = FileMap.coords(startOrMove.substr(0,2));
-			endName = startOrMove.substr(2,2);
-		}
+
+		if(typeof end == 'object')	
+			endName = FileMap.name(end.file, end.rank);
+		else
+			endName = startOrMove.substr(2,3);
 
 		// no piece?
 		if(!this.board.hasPiece(start.file, start.rank))
@@ -315,6 +355,8 @@ var EngineFactory;
 			return false;
 
 		var valids = this.getValidMovesForSquare(start.file, start.rank);
+		//console.log(endName);
+		//console.log(valids);
 		for(var i = 0; i < valids.length; i++)
 		{
 			if(valids[i] === endName)
@@ -543,7 +585,7 @@ var EngineFactory;
 		var start = FileMap.coords(notation.substr(0,2));
 		var end = FileMap.coords(notation.substr(2,2));
 		// if there's anything left, it's a promotion
-		var promotion = '';
+		var promotion = null;
 		if(notation.length > 4)
 			promotion = notation.substr(4,1);
 
@@ -555,7 +597,7 @@ var EngineFactory;
 		// not clear we should be checking this here...
 		// like maybe should have been done before hand?
 		if(	!skipValidCheck &&
-			!this.isValidMove(start, end))
+			!this.isValidMove(notation))
 		{
 			// exception?
 			return false;
@@ -598,6 +640,13 @@ var EngineFactory;
 
 			if(this.board.castlingOptions == '')
 				this.board.castlingOptions = '-';
+		}
+
+		// promoting?
+		if(promotion)
+		{
+			//console.log('promote? ' + promotion);
+			this.board.setPiece(promotion, end.file, end.rank);
 		}
 
 		// update move number/color

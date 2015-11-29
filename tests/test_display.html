@@ -15,14 +15,34 @@
 		<script type='text/javascript'>
 			$(document).ready(function()
 			{
-				//$('#board1').chessn00b({ playGame: false });
+				// play a game
 				$('#board1').chessn00b();
+
+				// start at a specific position,
+				// this one for pawn promotion
+				$('#board2').chessn00b(
+				{
+					fen: 'r3k3/6P1/8/8/8/8/8/R3K2R w - - 0 1'
+				});
 			});
 		</script>
+		<style>
+			.game
+			{
+				float: left;
+				margin-right: 2em;
+			}
+		</style>
 	</head>
 	<body>
-		<div id='play-test' style='float: left;'>
+		<div class='game'>
 			<div id='board1' style='width: 400px;'></div>
+			<p>Play Test</p>
 		</div>
+		<div class='game'>
+			<div id='board2' style='width: 400px;'></div>
+			<p>Promote Test</p>
+		</div>
+
 	</body>
 </html>

@@ -36,3 +36,25 @@
 {
 	color: #c22f12;
 }
+
+.chessn00b-promote .promote-black
+{
+	display: none;
+}
+
+.chessn00b-promote
+{
+	position: relative;
+	z-index: 100;
+	background: #fff;
+	padding: 0.5em 1em;
+	border-radius: 1em;
+	box-shadow: 1em 1em 1em #999;
+	display: none;
+	overflow: auto;
+}
+
+.chessn00b-promote a
+{
+	text-decoration: none;
+}

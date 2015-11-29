@@ -11,6 +11,7 @@ $.getScript('../src/board_10x12.js', function()
 		test("SimpleValidMoves", testSimpleValidMoves);
 		test("ComplexValidMoves", testComplexValidMoves);
 		test("Castling", testCastling);
+		test("PawnPromotion", testPawnPromotion);
 		test("FindPiece", testFindPiece);
 		test("SquareAttacked", testIsSquareAttacked);
 		test("InCheck", testInCheck);
@@ -277,6 +278,20 @@ var testCastling = function()
 	equal(engine.board.castlingOptions, 'kq');
 };
 
+var testPawnPromotion = function()
+{
+	var engine = EngineFactory.create();
+	engine.setFEN('r3k2r/6P1/8/8/8/8/8/R3K2R w - - 0 1');
+	// can take the rook, or promote to one of 4 options
+	equal(engine.getValidMovesForSquare(7,7).length, 5);
+	ok(engine.move('g7g8Q'));
+	equal(engine.getPositionFEN(), 'r3k1Qr/8/8/8/8/8/8/R3K2R');
+	
+	engine.setFEN('r3k2r/8/8/8/8/8/6p1/R3K2R b - - 0 1');
+	ok(engine.move('g2g1q'));
+	equal(engine.getPositionFEN(), 'r3k2r/8/8/8/8/8/8/R3K1qR');
+};
+
 var testStaticPieceValue = function()
 {
 	var engine = EngineFactory.create();
@@ -317,6 +332,12 @@ var testSimpleBestMove = function()
 	engine.setFEN('8/6p1/q5R1/8/8/8/8/8 w - - 0 1');
 	equal(engine.board.getColorToMove(), BoardFactory.getColorMap().white);
 	equal(engine.getBestMoveForWhite(), 'g6a6');
+
+	engine.setFEN('k7/6PR/8/8/8/8/8/7K w - - 0 1');
+	equal(engine.getBestMoveForWhite(), 'g7g8Q');
+
+	engine.setFEN('k7/8/8/8/8/r7/5pPK/6BB b - - 0 1');
+	equal(engine.getBestMoveForBlack(), 'f2f1n');
 };
 
 var test2PlyBestMove = function()

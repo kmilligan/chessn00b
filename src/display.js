@@ -171,6 +171,17 @@
 			this.element.append(rank);
 		}
 
+		// attach our promotion element
+		this.element.append('<div class="chessn00b-promote">'
+			+ '<a href="#" class="chessn00b-square promote-white" rel="Q">' + PieceMap['Q'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="q">' + PieceMap['q'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-white" rel="R">' + PieceMap['R'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="r">' + PieceMap['r'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-white" rel="B">' + PieceMap['B'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="b">' + PieceMap['b'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-white" rel="N">' + PieceMap['N'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="n">' + PieceMap['n'] + '</a>' 
+			+ '</div>');
 		// attach our status element
 		this.element.append('<div class="chessn00b-status">'
 			+ '<span class="illegal-move">Illegal move. </span>'
@@ -194,7 +205,7 @@
 
 		// setup our click handler
 		var that = this;
-		this.element.on('click', '.chessn00b-square', function()
+		this.element.on('click', '.chessn00b-rank .chessn00b-square', function()
 		{
 			that.squareClicked($(this));
 			return false;
@@ -218,7 +229,13 @@
 				+ 'px; ' // no space before px!
 				+ ' height: ' + width + 'px; '
 				+ ' line-height: ' + width + 'px; }';
-		
+
+		rule += '.' + this.id 
+				+ ' .chessn00b-promote { '
+				+ ' top: -' + Math.ceil(width * 4) + 'px; '
+				+ 'left: ' + Math.ceil(width * 2) + 'px; '
+				+ '}';
+
 		// IE does it differently...
 		if(this.dynCSS.styleSheet)
 			this.dynCSS.styleSheet.cssText = rule;
@@ -248,19 +265,50 @@
 			var move = '' + this.lastClickedSquare.displaySquare.square.name
 						+ square[0].displaySquare.square.name;
 
-			if(!this.engine.isValidMove(move))
+			var that = this;
+			var continueMove = function()
 			{
-				this.element.find('.illegal-move').show();
-				this.lastClickedSquare = null;
-				return;
+				if(!that.engine.isValidMove(move))
+				{
+					that.element.find('.illegal-move').show();
+					that.lastClickedSquare = null;
+					return;
+				}
+
+
+				that.engine.move(move);
+				that.update();
+				that.lastClickedSquare = null;
+
+				if(that.playGame)
+					that.autoMove();
+			};
+
+			// might be a promotion,
+			// in which case we need more info
+			if(this.engine.isPromotionPossible(move))
+			{
+				this.element.find('.chessn00b-promote').show();
+
+				// which color to show?
+				this.element.find('.chessn00b-promote .promote-white').show();
+				this.element.find('.chessn00b-promote .promote-black').hide();
+
+				// click handler
+				this.element.on('click.promote', 'a', function()
+				{
+					that.element.off('click.promote');
+					that.element.find('.chessn00b-promote').hide();
+					move += $(this).attr('rel');
+					//console.log('move is now: ' + move);
+					continueMove();
+					return false;
+				});
 			}
-
-			this.engine.move(move);
-			this.update();
-			this.lastClickedSquare = null;
-
-			if(this.playGame)
-				this.autoMove();
+			else
+			{
+				continueMove();
+			}
 
 			return;
 		}
