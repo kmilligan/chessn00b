@@ -171,17 +171,6 @@
 			this.element.append(rank);
 		}
 
-		// attach our promotion element
-		this.element.append('<div class="chessn00b-promote">'
-			+ '<a href="#" class="chessn00b-square promote-white" rel="Q">' + PieceMap['Q'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-black" rel="q">' + PieceMap['q'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-white" rel="R">' + PieceMap['R'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-black" rel="r">' + PieceMap['r'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-white" rel="B">' + PieceMap['B'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-black" rel="b">' + PieceMap['b'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-white" rel="N">' + PieceMap['N'] + '</a>' 
-			+ '<a href="#" class="chessn00b-square promote-black" rel="n">' + PieceMap['n'] + '</a>' 
-			+ '</div>');
 		// attach our status element
 		this.element.append('<div class="chessn00b-status">'
 			+ '<span class="illegal-move">Illegal move. </span>'
@@ -196,6 +185,21 @@
 		this.element.find('.game-over').hide();
 		this.element.find('.you-lose').hide();
 		this.element.find('.you-win').hide();
+
+		// attach our promotion element
+		this.element.append('<div class="chessn00b-promote">'
+			+ '<a href="#" class="chessn00b-square promote-white" rel="Q">' + PieceMap['Q'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="q">' + PieceMap['q'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-white" rel="R">' + PieceMap['R'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="r">' + PieceMap['r'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-white" rel="B">' + PieceMap['B'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="b">' + PieceMap['b'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-white" rel="N">' + PieceMap['N'] + '</a>' 
+			+ '<a href="#" class="chessn00b-square promote-black" rel="n">' + PieceMap['n'] + '</a>' 
+			+ '</div>');
+	
+
+		// if we're just a display board, don't need the status
 		if(!this.playGame)
 			this.element.find('.your-move').hide();
 
@@ -232,8 +236,8 @@
 
 		rule += '.' + this.id 
 				+ ' .chessn00b-promote { '
-				+ ' top: -' + Math.ceil(width * 4) + 'px; '
-				+ 'left: ' + Math.ceil(width * 2) + 'px; '
+				+ ' top: -' + Math.ceil(width * 5) + 'px; '
+				+ 'left: ' + Math.ceil(width * 2.2) + 'px; '
 				+ '}';
 
 		// IE does it differently...
@@ -275,7 +279,6 @@
 					return;
 				}
 
-
 				that.engine.move(move);
 				that.update();
 				that.lastClickedSquare = null;
@@ -288,7 +291,7 @@
 			// in which case we need more info
 			if(this.engine.isPromotionPossible(move))
 			{
-				this.element.find('.chessn00b-promote').show();
+				this.element.find('.chessn00b-promote').css('display', 'inline-block');
 
 				// which color to show?
 				this.element.find('.chessn00b-promote .promote-white').show();

@@ -282,12 +282,14 @@ var testPawnPromotion = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('r3k2r/6P1/8/8/8/8/8/R3K2R w - - 0 1');
-	// can take the rook, or promote to one of 4 options
-	equal(engine.getValidMovesForSquare(7,7).length, 5);
+	// can take the rook 4 ways,
+	// or move straight and promote to one of 4 options
+	equal(engine.getValidMovesForSquare(7,7).length, 8);
 	ok(engine.move('g7g8Q'));
 	equal(engine.getPositionFEN(), 'r3k1Qr/8/8/8/8/8/8/R3K2R');
 	
 	engine.setFEN('r3k2r/8/8/8/8/8/6p1/R3K2R b - - 0 1');
+	equal(engine.getValidMovesForSquare(7,2).length, 8);
 	ok(engine.move('g2g1q'));
 	equal(engine.getPositionFEN(), 'r3k2r/8/8/8/8/8/8/R3K1qR');
 };
@@ -324,6 +326,7 @@ var testSimpleBestMove = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('5q2/6r1/8/8/8/8/7K/8 b - - 0 1');
+	//engine.board.dump();
 	equal(engine.getBestMoveForBlack(), 'f8h8');
 
 	engine.setFEN('q7/5p2/6R1/8/8/8/8/8 b - - 0 1');

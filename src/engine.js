@@ -33,6 +33,7 @@ var EngineFactory;
 	Engine.init = function(board)
 	{
 		this.board = board;
+		this.searchPly = 3;
 		this.resetCaches();
 		return this;
 	};
@@ -171,7 +172,32 @@ var EngineFactory;
 				|| (!isWhite && postMoveEngine.blackInCheck()))
 				continue;
 
-			result.push(possibles[i]);
+			// attack with promotion!
+			if(isPawn)
+			{
+				if(isWhite && possibleRank == 8)
+				{
+					result.push(possibles[i] + 'Q');
+					result.push(possibles[i] + 'R');
+					result.push(possibles[i] + 'B');
+					result.push(possibles[i] + 'N');
+				}
+				else if(!isWhite && possibleRank == 1)
+				{
+					result.push(possibles[i] + 'q');
+					result.push(possibles[i] + 'r');
+					result.push(possibles[i] + 'b');
+					result.push(possibles[i] + 'n');
+				}
+				else
+				{
+					result.push(possibles[i]);
+				}
+			}
+			else
+			{
+				result.push(possibles[i]);
+			}
 		}
 
 		// for pawns, we may also be able to move directly ahead...
@@ -860,7 +886,7 @@ var EngineFactory;
 		abExamined = 0;
 		fenEvals = {};
 		var start = new Date().getTime();
-		this.alphabeta(3, -10000, 10000, forWhite);
+		this.alphabeta(this.searchPly, -10000, 10000, forWhite);
 		var end = new Date().getTime();
 		var diff = (end - start) / 1000;
 		//this.board.dump();

@@ -49,9 +49,15 @@
 	background: #fff;
 	padding: 0.5em 1em;
 	border-radius: 1em;
-	box-shadow: 1em 1em 1em #999;
+	box-shadow: 0.5em 0.5em 1em #999;
 	display: none;
 	overflow: auto;
+}
+
+.chessn00b-promote .chessn00b-square
+{
+	/* override the 12.5% */
+	width: 25%;
 }
 
 .chessn00b-promote a
