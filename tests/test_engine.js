@@ -272,10 +272,42 @@ var testCastling = function()
 	equal(engine.getValidMovesForSquare(5,1).length, 6);
 
 	// and if we move, the rook should too
-	engine.move('e1c1');
+	ok(engine.move('e1c1'));
 	equal(engine.getPositionFEN(), 'r3k1r1/8/8/8/8/8/8/2KR3R');
 	// ...and castling should no longer be an option
 	equal(engine.board.castlingOptions, 'kq');
+
+	// make short castling works too!
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1');
+	ok(engine.move('e1g1'));
+	equal(engine.getPositionFEN(), 'r3k2r/8/8/8/8/8/8/R4RK1');
+
+	// and for black!
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1');
+	ok(engine.move('e8g8'));
+	equal(engine.getPositionFEN(), 'r4rk1/8/8/8/8/8/8/R3K2R');
+
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1');
+	ok(engine.move('e8c8'));
+	equal(engine.getPositionFEN(), '2kr3r/8/8/8/8/8/8/R3K2R');
+
+	// if we move (but not castle) the king or the rook,
+	// castling should no longer be available
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1');
+	ok(engine.move('e8e7'));
+	equal(engine.board.castlingOptions, 'KQ');
+
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1');
+	ok(engine.move('e1e2'));
+	equal(engine.board.castlingOptions, 'kq');
+
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1');
+	ok(engine.move('h8h7'));
+	equal(engine.board.castlingOptions, 'KQq');
+
+	engine.setFEN('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1');
+	ok(engine.move('a1a2'));
+	equal(engine.board.castlingOptions, 'Kkq');
 };
 
 var testPawnPromotion = function()

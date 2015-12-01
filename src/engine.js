@@ -288,7 +288,8 @@ var EngineFactory;
 		if(isKing)
 		{
 			if(isWhite
-				&& !this.whiteInCheck())
+				&& !this.whiteInCheck()
+				&& rank == 1)
 			{
 				if(this.board.castlingOptions.indexOf('K') >= 0
 					&& !this.board.hasPiece(file + 1,rank)
@@ -311,7 +312,8 @@ var EngineFactory;
 				}
 			}
 			else if(!isWhite
-				&& !this.blackInCheck())
+				&& !this.blackInCheck()
+				&& rank == 8)
 			{
 				if(this.board.castlingOptions.indexOf('k') >= 0
 					&& !this.board.hasPiece(file + 1, rank)
@@ -634,7 +636,7 @@ var EngineFactory;
 		this.board.removePiece(start.file, start.rank);
 		this.board.setPiece(piece, end.file, end.rank);
 
-		// castling?
+		// castling? need to find and move the rook too.
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
 		if(isKing && Math.abs(start.file - end.file) == 2)
 		{
@@ -650,22 +652,60 @@ var EngineFactory;
 				rookSquare = { file: end.file -2, rank: end.rank };
 				targetSquare = { file: end.file + 1, rank: end.rank };
 			}
-
 			var rook = this.board.getPiece(rookSquare.file, rookSquare.rank);
+			if(!rook)
+			{
+				// this shouldn't happen; if it does,
+				// there is something wrong with the valid move generator.
+				console.log(start);
+				console.log(end);
+				console.log(rookSquare);
+				this.board.dump();
+			}
+
 			this.board.removePiece(rookSquare.file, rookSquare.rank);
 			this.board.setPiece(rook, targetSquare.file, targetSquare.rank);
 		
 			if(PieceMap.isWhite(rook))
 			{
-				this.board.castlingOptions = this.board.castlingOptions.replace('KQ', '');
+				this.board.castlingOptions = this.board.castlingOptions.replace(/[KQ]/g, '');
 			}
 			else
 			{
-				this.board.castlingOptions = this.board.castlingOptions.replace('kq', '');
+				this.board.castlingOptions = this.board.castlingOptions.replace(/[kq]/g, '');
 			}
 
 			if(this.board.castlingOptions == '')
 				this.board.castlingOptions = '-';
+		}
+		// moving the king removes castling options 
+		else if(isKing)
+		{
+			if(PieceMap.isWhite(piece))
+			{
+				this.board.castlingOptions = this.board.castlingOptions.replace(/[KQ]/g, '');
+			}
+			else
+			{
+				this.board.castlingOptions = this.board.castlingOptions.replace(/[kq]/g, '');
+			}
+		}
+
+		// moving a rook removes castling options that side
+		if(piece == 'r')
+		{
+			if(start.file == 1)
+				this.board.castlingOptions = this.board.castlingOptions.replace('q', '');
+			else if(start.file == 8)
+				this.board.castlingOptions = this.board.castlingOptions.replace('k', '');
+		}
+		else if(piece == 'R')
+		{
+			if(start.file == 1)
+				this.board.castlingOptions = this.board.castlingOptions.replace('Q', '');
+			else if(start.file == 8)
+				this.board.castlingOptions = this.board.castlingOptions.replace('K', '');
+
 		}
 
 		// promoting?

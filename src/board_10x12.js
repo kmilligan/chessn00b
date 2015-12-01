@@ -46,6 +46,8 @@ var BoardFactory;
 
 	PieceMap.isWhite = function(piece)
 	{
+		if(typeof piece != 'string')
+			throw new Error('Got a non-string piece "' + piece + '"');
 		return(piece.charCodeAt(0) < 91?true:false);
 	};
 
