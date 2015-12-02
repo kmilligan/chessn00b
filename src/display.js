@@ -197,7 +197,8 @@
 			+ '<a href="#" class="chessn00b-square promote-white" rel="N">' + PieceMap['N'] + '</a>' 
 			+ '<a href="#" class="chessn00b-square promote-black" rel="n">' + PieceMap['n'] + '</a>' 
 			+ '</div>');
-	
+
+		this.element.append('<div class="chessn00b-animator chessn00b-square"></div>');
 
 		// if we're just a display board, don't need the status
 		if(!this.playGame)
@@ -239,6 +240,10 @@
 				+ ' top: -' + Math.ceil(width * 5) + 'px; '
 				+ 'left: ' + Math.ceil(width * 2.2) + 'px; '
 				+ '}';
+
+		rule += '.' + this.id 
+				+ ' .chessn00b-animator { '
+				+ ' width: ' + width + 'px; }';
 
 		// IE does it differently...
 		if(this.dynCSS.styleSheet)
@@ -360,7 +365,8 @@
 			that.engine.move(myMove);
 			that.thinking = false;
 			that.element.find('.thinking').hide();
-			that.update();
+			that.animate(myMove);
+	//		that.update();
 
 			// see if they're in checkmate
 			if(that.engine.whiteInCheckmate())
@@ -395,11 +401,55 @@
 			for(var r = 1; r < 9; r++)
 			{
 				if(!this.board.hasPiece(f, r))
+				{
 					this.displaySquares[f][r].element.html('&nbsp;');
+					continue;
+				}
 
 				this.displaySquares[f][r].element.html(PieceMap[this.board.getPiece(f, r)]);
 			}
 		}
+	};
+
+	DisplayBoard.animate = function(move)
+	{
+		var start = FileMap.coords(move.substr(0,2));
+		var end = FileMap.coords(move.substr(2,2));
+		//console.log(move);
+		var destination = this.displaySquares[end.file][end.rank].element.offset();
+		var frame = this.element.find('.chessn00b-animator');
+
+		var startSquareOffset = this.displaySquares[start.file][start.rank].element.offset();
+
+		// remember; the piece has already moved on the internal board.
+		frame
+			.html(PieceMap[this.board.getPiece(end.file, end.rank)]);
+
+		// remove the piece from the starting place...
+		this.displaySquares[start.file][start.rank].element.html('&nbsp;');
+
+		// ...and animate the rest
+		var that = this;
+		frame
+			// this ends up being relative
+			//.offset(startSquareOffset)
+			.css('top', startSquareOffset.top + 'px')
+			.css('left', startSquareOffset.left + 'px')
+			.css('display', 'block')
+			.animate({
+				left: destination.left,
+				top: destination.top
+			}, 
+			// how long...
+			750,
+			// when done...
+			function()
+			{
+				frame.css('display', 'none');
+
+				// this will also deal with stuff like castling
+				that.update();
+			});
 	};
 // end scope wrapper
 })(jQuery);

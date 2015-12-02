@@ -64,3 +64,10 @@
 {
 	text-decoration: none;
 }
+
+.chessn00b-animator
+{
+	position: absolute;
+	z-index: 100;
+	float: none;
+}
