@@ -116,6 +116,18 @@
 		if(typeof options.playGame === 'undefined')
 			options.playGame = true;
 
+		options.displayGameScore = false;
+		if(typeof options.gameScore === 'undefined')
+		{
+			options.displayGameScore = false;
+		}
+		else if(typeof options.gameScore === 'string')
+		{
+			this.gameScoreElement = $(options.gameScore);
+			if(this.gameScoreElement.length > 0)
+				options.displayGameScore = true;
+		}
+
 		this.element = options.element;
 		this.board = BoardFactory.create();
 		this.engine = EngineFactory.create(this.board);
@@ -123,6 +135,8 @@
 		this.lastClickedSquare = null;
 		this.displaySquares = [];
 		this.thinking = false;
+		this.options = options;
+		this.moveList = [];
 
 		// need to track our board uniquely
 		// for sizing purposes
@@ -285,7 +299,7 @@
 				}
 
 				that.engine.move(move);
-				that.update();
+				that.update(move);
 				that.lastClickedSquare = null;
 
 				if(that.playGame)
@@ -366,7 +380,6 @@
 			that.thinking = false;
 			that.element.find('.thinking').hide();
 			that.animate(myMove);
-	//		that.update();
 
 			// see if they're in checkmate
 			if(that.engine.whiteInCheckmate())
@@ -394,7 +407,19 @@
 		return this.engine.getPositionFEN();
 	};
 
-	DisplayBoard.update = function()
+	DisplayBoard.update = function(move)
+	{
+		this.updateDisplayBoard();
+
+		if(typeof move === 'undefined')
+			return;
+
+		// add to our move list
+		this.moveList.push(move);
+		this.updateGameScore();
+	};
+
+	DisplayBoard.updateDisplayBoard = function()
 	{
 		for(var f = 1; f < 9; f++)
 		{
@@ -409,6 +434,24 @@
 				this.displaySquares[f][r].element.html(PieceMap[this.board.getPiece(f, r)]);
 			}
 		}
+	};
+
+	DisplayBoard.updateGameScore = function()
+	{
+		if(!this.options.displayGameScore)
+			return;
+
+		var score = '';
+
+		for(var i = 0; i < this.moveList.length; i+=2)
+		{
+			score += ''+(i/2+1)+'. ';
+			score += this.moveList[i];
+			if(i + 1 < this.moveList.length)
+				score += ' '+this.moveList[i+1];
+			score += ' ';
+		}
+		this.gameScoreElement.html(score);
 	};
 
 	DisplayBoard.animate = function(move)
@@ -448,7 +491,7 @@
 				frame.css('display', 'none');
 
 				// this will also deal with stuff like castling
-				that.update();
+				that.update(move);
 			});
 	};
 // end scope wrapper

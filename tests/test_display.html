@@ -24,6 +24,12 @@
 				{
 					fen: 'r3k2r/6P1/8/8/8/8/8/R3K2R w - - 0 1'
 				});
+
+				// play a game and show other windows
+				$('#board3').chessn00b(
+				{
+					gameScore: '#gamescore'
+				});
 			});
 		</script>
 		<style>
@@ -31,6 +37,12 @@
 			{
 				float: left;
 				margin-right: 2em;
+			}
+
+			#gamescore
+			{
+				border: 1px solid #ccc;
+				height: 100px;
 			}
 		</style>
 	</head>
@@ -43,6 +55,10 @@
 			<div id='board2' style='width: 400px;'></div>
 			<p>Promote Test</p>
 		</div>
-
+		<div class='game'>
+			<div id='board3' style='width: 400px;'></div>
+			<div id='gamescore'></div>
+			<p>Window Test</p>
+		</div>
 	</body>
 </html>
