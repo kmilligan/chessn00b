@@ -398,7 +398,8 @@
 			{
 				that.element.find('.your-move').show();
 			}
-		}, 0);
+		// attempt to let the UI do other things
+		}, 20);
 	};
 
 	DisplayBoard.setFEN = function(fen)
