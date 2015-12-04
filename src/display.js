@@ -117,16 +117,19 @@
 			options.playGame = true;
 
 		options.displayGameScore = false;
-		if(typeof options.gameScore === 'undefined')
+		if(typeof options.gameScoreSelector === 'undefined')
 		{
 			options.displayGameScore = false;
 		}
-		else if(typeof options.gameScore === 'string')
+		else if(typeof options.gameScoreSelector === 'string')
 		{
-			this.gameScoreElement = $(options.gameScore);
+			this.gameScoreElement = $(options.gameScoreSelector);
 			if(this.gameScoreElement.length > 0)
 				options.displayGameScore = true;
 		}
+
+		if(typeof options.notationType === 'undefined')
+			options.notationType = 'SAN';
 
 		this.element = options.element;
 		this.board = BoardFactory.create();
@@ -136,7 +139,8 @@
 		this.displaySquares = [];
 		this.thinking = false;
 		this.options = options;
-		this.moveList = [];
+		this.gameScore = '';
+		this.currentPieceCount = this.board.getPieceCount();
 
 		// need to track our board uniquely
 		// for sizing purposes
@@ -268,75 +272,77 @@
 
 	DisplayBoard.squareClicked = function(square)
 	{
+		// hey! computer turn!
 		if(this.thinking)
 			return;
 
+		// clear any errors
 		this.element.find('.illegal-move').hide();
 
-		if(this.lastClickedSquare)
+		// first click?
+		if(!this.lastClickedSquare)
 		{
-			// uhh same square; just move on.
-			if(square[0] == this.lastClickedSquare)
-			{
-				this.lastClickedSquare.displaySquare.unlite();
-				this.lastClickedSquare = null;
-				return;
-			}
-
-			this.lastClickedSquare.displaySquare.unlite();
-
-			var move = '' + this.lastClickedSquare.displaySquare.square.name
-						+ square[0].displaySquare.square.name;
-
-			var that = this;
-			var continueMove = function()
-			{
-				if(!that.engine.isValidMove(move))
-				{
-					that.element.find('.illegal-move').show();
-					that.lastClickedSquare = null;
-					return;
-				}
-
-				that.engine.move(move);
-				that.update(move);
-				that.lastClickedSquare = null;
-
-				if(that.playGame)
-					that.autoMove();
-			};
-
-			// might be a promotion,
-			// in which case we need more info
-			if(this.engine.isPromotionPossible(move))
-			{
-				this.element.find('.chessn00b-promote').css('display', 'inline-block');
-
-				// which color to show?
-				this.element.find('.chessn00b-promote .promote-white').show();
-				this.element.find('.chessn00b-promote .promote-black').hide();
-
-				// click handler
-				this.element.on('click.promote', 'a', function()
-				{
-					that.element.off('click.promote');
-					that.element.find('.chessn00b-promote').hide();
-					move += $(this).attr('rel');
-					//console.log('move is now: ' + move);
-					continueMove();
-					return false;
-				});
-			}
-			else
-			{
-				continueMove();
-			}
-
+			square[0].displaySquare.lite();
+			this.lastClickedSquare = square[0];
 			return;
 		}
 
-		square[0].displaySquare.lite();
-		this.lastClickedSquare = square[0]; 
+		// uhh same square; just move on.
+		if(square[0] == this.lastClickedSquare)
+		{
+			this.lastClickedSquare.displaySquare.unlite();
+			this.lastClickedSquare = null;
+			return;
+		}
+
+		this.lastClickedSquare.displaySquare.unlite();
+
+		var move = '' + this.lastClickedSquare.displaySquare.square.name
+					+ square[0].displaySquare.square.name;
+
+		var that = this;
+		var continueMove = function()
+		{
+			if(!that.engine.isValidMove(move))
+			{
+				that.element.find('.illegal-move').show();
+				that.lastClickedSquare = null;
+				return;
+			}
+
+			that.engine.move(move);
+			that.update(move);
+			that.lastClickedSquare = null;
+
+			if(that.playGame)
+				that.autoMove();
+		};
+
+		// might be a promotion,
+		// in which case we need more info
+		if(this.engine.isPromotionPossible(move))
+		{
+			this.element.find('.chessn00b-promote').css('display', 'inline-block');
+
+			// which color to show?
+			this.element.find('.chessn00b-promote .promote-white').show();
+			this.element.find('.chessn00b-promote .promote-black').hide();
+
+			// click handler
+			this.element.on('click.promote', 'a', function()
+			{
+				that.element.off('click.promote');
+				that.element.find('.chessn00b-promote').hide();
+				move += $(this).attr('rel');
+				//console.log('move is now: ' + move);
+				continueMove();
+				return false;
+			});
+		}
+		else
+		{
+			continueMove();
+		}
 	};
 
 	DisplayBoard.autoMove = function()
@@ -377,9 +383,9 @@
 			}
 
 			that.engine.move(myMove);
+			that.animate(myMove);
 			that.thinking = false;
 			that.element.find('.thinking').hide();
-			that.animate(myMove);
 
 			// see if they're in checkmate
 			if(that.engine.whiteInCheckmate())
@@ -415,8 +421,7 @@
 			return;
 
 		// add to our move list
-		this.moveList.push(move);
-		this.updateGameScore();
+		this.updateGameScore(move);
 	};
 
 	DisplayBoard.updateDisplayBoard = function()
@@ -436,22 +441,82 @@
 		}
 	};
 
-	DisplayBoard.updateGameScore = function()
+	DisplayBoard.updateGameScore = function(move)
 	{
+		// was there a capture?
+		var pieceCount = this.board.getPieceCount();
+		var capture = false;
+		if(pieceCount < this.currentPieceCount)
+			capture = true;
+
+		this.currentPieceCount = pieceCount;
+
+		var score = '';
+		if(this.board.colorToMove != ColorMap.white)
+			score += ''+ this.board.fullMoveNumber +'. ';
+
+		score += this.convertNotation(move, capture);
+		
+		if(this.board.colorToMove == ColorMap.white
+			&& this.engine.whiteInCheck())
+			score += '+';
+		else if(this.board.colorToMove == ColorMap.black
+			&& this.engine.blackInCheck())
+			score += '+';
+
+		score += ' ';
+
+		// have to come up with a more flexible method.
+		this.gameScore += score;
+
 		if(!this.options.displayGameScore)
 			return;
 
-		var score = '';
+		this.gameScoreElement.html(this.gameScore);
+	};
 
-		for(var i = 0; i < this.moveList.length; i+=2)
+	DisplayBoard.convertNotation = function(move, capture)
+	{
+		var startCoords = FileMap.coords(move.substr(0,2));
+		var endCoords = FileMap.coords(move.substr(2,2));
+		var end = move.substr(2,3);
+
+		var piece = this.board.getPiece(endCoords.file, endCoords.rank);
+
+		var notation;
+		// if it's a pawn, we never show it...
+		if(piece == 'p' || piece == 'P')
 		{
-			score += ''+(i/2+1)+'. ';
-			score += this.moveList[i];
-			if(i + 1 < this.moveList.length)
-				score += ' '+this.moveList[i+1];
-			score += ' ';
+			//...unless there is a capture
+			if(capture)
+				notation = move.substr(0,1) + 'x' + end;
+			else
+				notation = end;
 		}
-		this.gameScoreElement.html(score);
+		// if it's a King, watch out for castling
+		else if((piece == 'k' || piece == 'K')
+			&& (Math.abs(startCoords.file - endCoords.file) == 2))
+		{
+			// which way?
+			if(startCoords.file < endCoords.file)
+				notation = 'O-O';
+			else
+				notation = 'O-O-O';
+		}
+		else
+		{
+			if(this.options.notationType == 'FAN')
+				notation = PieceMap[piece];
+			else
+				notation = piece.toUpperCase();
+
+			if(capture)
+				notation += 'x';
+
+			notation += end;
+		}
+
+		return notation;
 	};
 
 	DisplayBoard.animate = function(move)
@@ -484,7 +549,7 @@
 				top: destination.top
 			}, 
 			// how long...
-			750,
+			400,
 			// when done...
 			function()
 			{

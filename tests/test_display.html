@@ -28,7 +28,7 @@
 				// play a game and show other windows
 				$('#board3').chessn00b(
 				{
-					gameScore: '#gamescore'
+					gameScoreSelector: '#gamescore'
 				});
 			});
 		</script>
@@ -37,26 +37,28 @@
 			{
 				float: left;
 				margin-right: 2em;
+				width: 400px;
 			}
 
 			#gamescore
 			{
 				border: 1px solid #ccc;
 				height: 100px;
+				overflow: scroll;
 			}
 		</style>
 	</head>
 	<body>
 		<div class='game'>
-			<div id='board1' style='width: 400px;'></div>
+			<div id='board1'></div>
 			<p>Play Test</p>
 		</div>
 		<div class='game'>
-			<div id='board2' style='width: 400px;'></div>
+			<div id='board2'></div>
 			<p>Promote Test</p>
 		</div>
 		<div class='game'>
-			<div id='board3' style='width: 400px;'></div>
+			<div id='board3'></div>
 			<div id='gamescore'></div>
 			<p>Window Test</p>
 		</div>

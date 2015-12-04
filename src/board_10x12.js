@@ -274,6 +274,20 @@ var BoardFactory;
 		//return String.fromCharCode(this.squares[this.ap(file, rank)]); 
 	};
 
+	Board.getPieceCount = function()
+	{
+		var numPieces = 0;
+		for(var r = 8; r > 0; r--)
+		{
+			for(var f = 1; f < 9; f++)
+			{
+				if(this.hasPiece(f,r))
+					numPieces++;
+			}
+		}
+		return numPieces;
+	};
+
 	Board.getSquareColor = function(file, rank)
 	{
 		// might have given us algebraic
