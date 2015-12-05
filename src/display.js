@@ -131,6 +131,9 @@
 		if(typeof options.notationType === 'undefined')
 			options.notationType = 'SAN';
 
+		if(typeof options.coordinates !== 'boolean')
+			options.coordinates = false;
+
 		this.element = options.element;
 		this.board = BoardFactory.create();
 		this.engine = EngineFactory.create(this.board);
@@ -175,6 +178,11 @@
 	*/
 	DisplayBoard.createDisplay = function()
 	{
+		this.element.append('<div class="chessn00b-outer-board"><div class="chessn00b-inner-board"></div></div>');
+		var innerBoard = this.element.find('.chessn00b-inner-board');
+		var outerBoard = this.element.find('.chessn00b-outer-board');
+
+		// squares...
 		for(var r = 8; r > 0; r--)
 		{
 			// container div for each rank
@@ -186,7 +194,22 @@
 				rank.append(this.displaySquares[f][r].element);
 			}
 			
-			this.element.append(rank);
+			innerBoard.append(rank);
+		}
+
+		// coordinates...
+		if(this.options.coordinates)
+		{
+			var files = $('<div class="chessn00b-file-markers"></div>');
+			for(var f = 1; f < 9; f++)
+				files.append('<div class="chessn00b-file-marker">' + FileMap[f] + '</div>');
+
+			var ranks = $('<div class="chessn00b-rank-markers"></div>');
+			for(var r = 8; r > 0; r--)
+				ranks.append('<div class="chessn00b-rank-marker">' + r + '</div>');
+
+			outerBoard.append(ranks);
+			outerBoard.append(files);
 		}
 
 		// attach our status element
@@ -237,7 +260,9 @@
 
 	DisplayBoard.autosetHeight = function()
 	{
-		var width = this.displaySquares[1][1].element.width();	
+		// this assumes the inner board isn't floated, which it needs to be...
+		//var width = this.displaySquares[1][1].element.width();
+		var width = Math.ceil(this.element.width() / 9);
 
 		// setup our dynamic css
 		if(typeof this.dynCSS == 'undefined')
@@ -247,9 +272,19 @@
 		}	
 
 		var rule = '.' + this.id +
+				' .chessn00b-inner-board, .chessn00b-file-markers { '
+				+ 'width: ' + (width * 8) + 'px; '
+				+ '}';
+
+		rule += '.' + this.id +
 				' .chessn00b-square { font-size: ' 
 				+ Math.ceil(width * 0.82) 
 				+ 'px; ' // no space before px!
+				+ ' height: ' + width + 'px; '
+				+ ' line-height: ' + width + 'px; }';
+
+		rule += '.' + this.id +
+				' .chessn00b-rank-marker {'
 				+ ' height: ' + width + 'px; '
 				+ ' line-height: ' + width + 'px; }';
 

@@ -4,11 +4,11 @@
 	overflow: auto;
 }
 
-.chessn00b-square
+.chessn00b-square,
+.chessn00b-file-marker
 {
 	width: 12.5%;
 	float: left;
-	font-family: Arial, sans-serif; 
 	text-align: center;
 }
 
@@ -22,6 +22,24 @@
 	background-color: #f0d9b5;
 }
 
+.chessn00b-inner-board
+{
+	float: left;
+}
+
+.chessn00b-rank-markers
+{
+	float: left;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
+
+.chessn00b-file-markers
+{
+	clear: both;
+	padding-top: 0.3em;
+}
+
 .chessn00b-square-lit
 {
 	background-color: #29f;
@@ -29,7 +47,8 @@
 
 .chessn00b-status
 {
-	font-family: sans-serif;
+	clear: both;
+	padding-top: 0.5em;
 }
 
 .chessn00b-status .illegal-move

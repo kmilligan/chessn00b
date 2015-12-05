@@ -15,8 +15,8 @@
 		<script type='text/javascript'>
 			$(document).ready(function()
 			{
-				// play a game
-				$('#board1').chessn00b();
+				// defaults
+				//$('#board1').chessn00b();
 
 				// start at a specific position,
 				// this one for pawn promotion
@@ -28,7 +28,8 @@
 				// play a game and show other windows
 				$('#board3').chessn00b(
 				{
-					gameScoreSelector: '#gamescore'
+					gameScoreSelector: '#gamescore',
+					coordinates: true
 				});
 			});
 		</script>
@@ -43,24 +44,28 @@
 			#gamescore
 			{
 				border: 1px solid #ccc;
-				height: 100px;
+				width: 100px;
+				height: 400px;
 				overflow: scroll;
+				float: left
 			}
 		</style>
 	</head>
 	<body>
+		<!--
 		<div class='game'>
 			<div id='board1'></div>
 			<p>Play Test</p>
 		</div>
+		-->
 		<div class='game'>
 			<div id='board2'></div>
 			<p>Promote Test</p>
 		</div>
 		<div class='game'>
 			<div id='board3'></div>
-			<div id='gamescore'></div>
 			<p>Window Test</p>
 		</div>
+		<div id='gamescore'></div>
 	</body>
 </html>

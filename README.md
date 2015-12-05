@@ -33,11 +33,11 @@ The display board has a jQuery plugin hook, so assuming you've already included 
 Options
 -------
 
-There are only two at the moment:
-
 **fen** - provide the initial board state in FEN. Defaults to standard chess opening position.
 
 **playGame** - boolean; should the engine attempt to play if a piece is moved? Defaults to true.
+
+**coordinates** -- boolean; display rank and file markers; defaults to false.
 
 Limitations
 -----------
