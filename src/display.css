@@ -30,14 +30,18 @@
 .chessn00b-rank-markers
 {
 	float: left;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+	padding-left: 0.55em;
+	padding-right: 0.55em;
 }
 
 .chessn00b-file-markers
 {
 	clear: both;
 	padding-top: 0.3em;
+	/* these make it show up when there is an overlapping border on the inner board */
+	overflow: auto;
+	position: relative;
+	z-index: 2;
 }
 
 .chessn00b-square-lit
@@ -89,4 +93,5 @@
 	position: absolute;
 	z-index: 100;
 	float: none;
+	display: none;
 }
