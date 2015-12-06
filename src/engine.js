@@ -81,6 +81,15 @@ var EngineFactory;
 		return this.validBlackMoves;
 	};
 
+	Engine.getValidMovesFor = function(forWhite)
+	{
+		this.determineValidMoves(forWhite);
+		if(forWhite)
+			return this.validWhiteMoves;
+		else
+			return this.validBlackMoves;
+	};
+
 	Engine.determineValidMoves = function(forWhite)
 	{
 		// already done this?
@@ -380,7 +389,10 @@ var EngineFactory;
 		// not your turn?
 		if(PieceMap.getColor(this.board.getPiece(start.file, start.rank)) 
 			!= this.board.getColorToMove())
+		{
+			//console.log('not your turn!');
 			return false;
+		}
 
 		var valids = this.getValidMovesForSquare(start.file, start.rank);
 		//console.log(endName);
@@ -619,7 +631,10 @@ var EngineFactory;
 
 		// can only move if we have something to move!
 		if(!this.board.hasPiece(start.file, start.rank))
+		{
+			//console.log('no piece found');
 			return false;
+		}
 
 		// valid move?
 		// not clear we should be checking this here...
@@ -628,6 +643,7 @@ var EngineFactory;
 			!this.isValidMove(notation))
 		{
 			// exception?
+			//console.log('invalid move ' + notation);
 			return false;
 		}
 
@@ -912,7 +928,7 @@ var EngineFactory;
 	Engine.clone = function()
 	{
 		var board = EngineFactory.create();
-		board.setFromBoard(board.board);
+		board.setFromBoard(this.board);
 
 		return board;
 	};
@@ -940,25 +956,74 @@ var EngineFactory;
 		return this.lastBestMove;
 	};
 
+
+	// this doesn't work yet; working through my understanding of alphabeta.
+	Engine.alphabetaNew = function(depth, a, b, wantsMax)
+	{
+		abExamined++;
+		// if we hit bottom, we simply return the evaluation here.
+		if(depth == 0)
+			return this.evaluatePosition();
+
+		var moves = this.getValidMovesFor(wantsMax);
+
+		// if there are no moves, it's either checkmate or stalemate.
+		var numMoves = moves.length;
+		if(numMoves == 0)
+			return this.evaluatePosition();
+
+		var val, cloned;
+		//console.log(moves);
+		for(var i = 0; i < numMoves; i++)
+		{
+			cloned = this.clone();
+			cloned.move(moves[i]);
+			val = cloned.alphabeta(depth - 1, a, b, !wantsMax);
+			//console.log(depth + ', ' + moves[i] + ', ' + val + ', a: ' + a + ', b: ' + b);
+			if(wantsMax)
+			{
+				if(a < val)
+				{
+					a = val;
+					this.lastBestMove = moves[i];
+					this.lastValue = val;
+					if(val == 1000)
+						break;
+				}
+			}
+			else
+			{
+				if(b > val)
+				{
+					b = val;
+					this.lastBestMove = moves[i];
+					this.lastValue = val;
+					if(val == -1000)
+						break;
+				}
+			}
+
+			// no point in continuing; prune
+			if(b <= a)
+				break;
+		}
+
+		if(wantsMax)
+			return b;
+		else
+			return a;
+	};
+
+
+
 	Engine.alphabeta = function(depth, a, b, isWhite)
 	{
 		abExamined++;
-		var currFEN = this.getPositionFEN()
-			+ ' ' + (this.board.getColorToMove() == ColorMap.white?'w':'b');
 		var val;
 
-		// test terminal conditions
+		// we only actually evaluate the position once we've hit bottom.
 		if(depth == 0)
-		{
-			if(fenEvals[currFEN])
-				return fenEvals[currFEN];
-
-			val = this.evaluatePosition();
-			fenEvals[currFEN] = val;
-
-			//console.log('leaf: ' + val);
-			return val;
-		}
+			return this.evaluatePosition();
 
 		var board = this.clone();
 		var moves;
@@ -966,66 +1031,85 @@ var EngineFactory;
 		if(isWhite)
 		{
 			moves = this.getValidMovesForWhite();
+
+			// what if we have no valid moves?
+
 			for(var i = 0; i < moves.length; i++)
 			{
+				//console.log(depth + ' (w) ' + moves[i]);
+				// reset the board
 				board.setFromBoard(this.board);
+
+				// make the move
 				board.move(moves[i]);
-				curr = a;
+				//board.board.dump();
 
 				if(board.blackInCheckmate())
 				{
+					//console.log('black checkmated');
 					a = 1000;
 					this.lastBestMove = moves[i];
 					this.lastValue = a;
 					break;
 				}
-				else
-				{
-					val = board.alphabeta(depth - 1, a, b, !isWhite);
-					a = Math.max(a, val);
-				}
 
-				if(curr != a)
+				val = board.alphabeta(depth - 1, a, b, !isWhite);
+
+				if(a < val)
 				{
+					a = val;
 					this.lastBestMove = moves[i];
 					this.lastValue = val;
 				}
-				
+
 				if(b <= a)
+				{
+					//console.log('prune');
 					break;
+				}
 			}
 			return a;
 		}
 		else
 		{
 			moves = this.getValidMovesForBlack();
+
+			// what if we have no valid moves?
+
 			for(var i = 0; i < moves.length; i++)
 			{
+				//console.log(depth + ' (b) ' + moves[i]);
+				// reset the board
 				board.setFromBoard(this.board);
+
+				// make the move
 				board.move(moves[i]);
-				curr = b;
+				if(depth == 5)
+					board.board.dump();
 
 				if(board.whiteInCheckmate())
 				{
+					//console.log('white checkmated');
 					b = -1000;
 					this.lastBestMove = moves[i];
 					this.lastValue = b;
 					break;
 				}
-				else
-				{
-					val = board.alphabeta(depth - 1, a, b, !isWhite);
-					b = Math.min(b, val);
-				}
 
-				if(curr != b)
+				val = board.alphabeta(depth - 1, a, b, !isWhite);
+
+				if(b > val)
 				{
+					b = val;
 					this.lastBestMove = moves[i];
 					this.lastValue = b;
 				}
 
 				if(b <= a)
+				{
+					//console.log('prune');
 					break;
+				}
 			}
 
 			return b;

@@ -357,7 +357,12 @@ var testSimpleMove = function()
 var testSimpleBestMove = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('5q2/6r1/8/8/8/8/7K/8 b - - 0 1');
+
+	engine.setFEN('7k/6p1/6P1/8/P7/5npp/8/7K b - - 0 1');
+	//engine.board.dump();
+	equal(engine.getBestMoveForBlack(), 'g3g2');
+
+	engine.setFEN('4kq2/6r1/8/8/8/8/7K/8 b - - 0 1');
 	//engine.board.dump();
 	equal(engine.getBestMoveForBlack(), 'f8h8');
 
@@ -379,8 +384,9 @@ var test2PlyBestMove = function()
 {
 	var engine = EngineFactory.create();
 	// have a choice...take the queen (and lose next turn)
-	// or take the bishop
-	engine.setFEN('8/p7/1q/1R5b/8/8/8/8 w - - 0 1');
+	// or take the en prise rook
+	engine.setFEN('5nk1/p4ppp/1q/1R5r/8/8/5PPP/5NK1 w - - 0 1');
+	//engine.board.dump();
 	equal(engine.getBestMoveForWhite(), 'b5h5');
 };
 
