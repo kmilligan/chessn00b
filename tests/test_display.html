@@ -31,6 +31,12 @@
 					gameScoreSelector: '#gamescore',
 					coordinates: true
 				});
+
+				// test stalemate
+				$('#board4').chessn00b(
+				{
+					fen: '4k3/4P3/8/4K3/8/8/8/8 w - - 0 1'
+				});
 			});
 		</script>
 		<style>
@@ -61,6 +67,10 @@
 		<div class='game'>
 			<div id='board2'></div>
 			<p>Promote Test</p>
+		</div>
+		<div class='game'>
+			<div id='board4'></div>
+			<p>Stalemate Test</p>
 		</div>
 		<div class='game'>
 			<div id='board3'></div>

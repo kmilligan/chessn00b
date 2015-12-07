@@ -213,12 +213,15 @@
 		}
 
 		// attach our status element
+		// TODO separate out the strings for translation
+		// also, only show the one we need? 
 		this.element.append('<div class="chessn00b-status">'
 			+ '<span class="illegal-move">Illegal move. </span>'
 			+ '<span class="your-move">Your move</span>'
 			+ '<span class="game-over">Game Over. </span>'
 			+ '<span class="you-win">You win!</span>'
-			+ '<span class="you-lose">You win!</span>'
+			+ '<span class="you-lose">You lose!</span>'
+			+ '<span class="draw">Draw.</span>'
 			+ '<span class="thinking">Thinking...</span>'
 			+ '</div>');
 		this.element.find('.illegal-move').hide();
@@ -226,6 +229,7 @@
 		this.element.find('.game-over').hide();
 		this.element.find('.you-lose').hide();
 		this.element.find('.you-win').hide();
+		this.element.find('.draw').hide();
 
 		// attach our promotion element
 		this.element.append('<div class="chessn00b-promote">'
@@ -390,13 +394,19 @@
 		{
 			var myMove;
 
-			// see if we're in checkmate first
-			if(that.engine.blackInCheckmate())
+			// see if we're in checkmate or stalemate first
+			var checkmate = that.engine.blackInCheckmate();
+			var stalemate = that.engine.inStalemate(false);
+			if(checkmate || stalemate)
 			{
 				that.thinking = false;
 				that.element.find('.thinking').hide();
 				that.element.find('.game-over').show();
-				that.element.find('.you-win').show();
+				if(checkmate)
+					that.element.find('.you-win').show();
+				else
+					that.element.find('.draw').show();
+
 				return;
 			}
 
@@ -422,11 +432,17 @@
 			that.thinking = false;
 			that.element.find('.thinking').hide();
 
-			// see if they're in checkmate
-			if(that.engine.whiteInCheckmate())
+			// see if they're in checkmate / stalemate
+			checkmate = that.engine.whiteInCheckmate();
+			stalemate = that.engine.inStalemate(true);
+			if(checkmate || stalemate)
 			{
 				that.element.find('.game-over').show();
-				that.element.find('.you-lose').show();
+				if(checkmate)
+					that.element.find('.you-lose').show();
+				else
+					that.element.find('.draw').show();
+
 				return;
 			}
 			else

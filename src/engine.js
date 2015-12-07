@@ -565,42 +565,49 @@ var EngineFactory;
 		this.board.copyFrom(board);
 	};
 
-	Engine.blackInCheck = function()
+	Engine.inStalemate = function(white)
 	{
-		var king = this.findPiece('k');
+		if(this.inCheck(white))
+			return false;
+
+		return (this.getValidMovesFor(white).length == 0?true:false);
+	};
+
+	Engine.inCheck = function(white)
+	{
+		var king = this.findPiece((white?'K':'k'));
 		if(king.length == 0)
 			return false;
 
 		return this.isSquareAttacked(king[0].file, king[0].rank);
+	};
+
+	Engine.blackInCheck = function()
+	{
+		return this.inCheck(false);
 	};
 
 	Engine.whiteInCheck = function()
 	{
-		var king = this.findPiece('K');
-		if(king.length == 0)
+		return this.inCheck(true);
+	};
+
+	Engine.inCheckmate = function(white)
+	{
+		if(!this.inCheck(white))
 			return false;
 
-		return this.isSquareAttacked(king[0].file, king[0].rank);
+		return (this.getValidMovesFor(white).length == 0?true:false);
 	};
 
 	Engine.blackInCheckmate = function()
 	{
-		var king = this.findPiece('k');
-		if(king.length == 0)
-			return false;
-
-		return (this.isSquareAttacked(king[0].file, king[0].rank)
-				&& this.getValidMovesForBlack().length == 0);
+		return this.inCheckmate(false);
 	};
 
 	Engine.whiteInCheckmate = function()
 	{
-		var king = this.findPiece('K');
-		if(king.length == 0)
-			return false;
-
-		return (this.isSquareAttacked(king[0].file, king[0].rank)
-				&& this.getValidMovesForWhite().length == 0);
+		return this.inCheckmate(true);
 	};
 
 	Engine.moves = function(moves)
@@ -1124,6 +1131,11 @@ var EngineFactory;
 			return 1000;
 
 		var value = 0;
+
+		// this one is a little odd cuz it depends on whose turn it is
+		var whiteToMove = (this.board.getColorToMove() == ColorMap.white?true:false);
+		if(this.inStalemate(whiteToMove))
+			return value;
 
 		value += this.getWhiteStaticValue();
 		value -= this.getBlackStaticValue();

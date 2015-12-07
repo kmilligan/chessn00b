@@ -21,6 +21,7 @@ $.getScript('../src/board_10x12.js', function()
 		test("SimpleMove", testSimpleMove);
 		test("SimpleBestMove", testSimpleBestMove);
 		test("2PlyBestMove", test2PlyBestMove);
+		test("Stalemate", testStalemate);
 		//test("Timing", testTiming);
 	});
 });
@@ -388,6 +389,16 @@ var test2PlyBestMove = function()
 	engine.setFEN('5nk1/p4ppp/1q/1R5r/8/8/5PPP/5NK1 w - - 0 1');
 	//engine.board.dump();
 	equal(engine.getBestMoveForWhite(), 'b5h5');
+};
+
+var testStalemate = function()
+{
+	var engine = EngineFactory.create();
+	engine.setFEN('6k1/6P1/6PB/6P1/8/8/8/6K1 b - - 0 1');
+	equal(engine.inStalemate(false), true);
+	equal(engine.inStalemate(true), false);
+
+	equal(engine.evaluatePosition(), 0);
 };
 
 var testTiming = function()
