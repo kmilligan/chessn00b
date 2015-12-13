@@ -20,6 +20,7 @@ $.getScript('../src/board_10x12.js', function()
 		test("DynamicPieceValue", testDynamicPieceValue);
 		test("SimpleMove", testSimpleMove);
 		test("SimpleBestMove", testSimpleBestMove);
+		test("SimpleBestMove2", testSimpleBestMove2);
 		test("2PlyBestMove", test2PlyBestMove);
 		test("Stalemate", testStalemate);
 		//test("Timing", testTiming);
@@ -163,7 +164,7 @@ var testSimpleValidMoves = function()
 var testComplexValidMoves = function()
 {
 	var engine = EngineFactory.create();
-	engine.setFEN('8/8/8/8/8/1P6/P7/8 w - - 0 1');	
+	engine.setFEN('3K1k2/8/8/8/8/1P6/P7/8 w - - 0 1');	
 
 	// pawns can move two on first move!
 	equal(engine.getValidMovesForSquare(2,3).length, 1);
@@ -357,38 +358,83 @@ var testSimpleMove = function()
 
 var testSimpleBestMove = function()
 {
+	stop();
 	var engine = EngineFactory.create();
-
 	engine.setFEN('7k/6p1/6P1/8/P7/5npp/8/7K b - - 0 1');
 	//engine.board.dump();
-	equal(engine.getBestMoveForBlack(), 'g3g2');
+	engine.getBestMove(false, function(move)
+	{
+		equal(move, 'g3g2');
 
-	engine.setFEN('4kq2/6r1/8/8/8/8/7K/8 b - - 0 1');
-	//engine.board.dump();
-	equal(engine.getBestMoveForBlack(), 'f8h8');
+		engine.setFEN('4kq2/6r1/8/8/8/8/7K/8 b - - 0 1');
+		//engine.board.dump();
+		engine.getBestMove(false, function(move)
+		{
+			equal(move, 'f8h8');
 
-	engine.setFEN('q7/5p2/6R1/8/8/8/8/8 b - - 0 1');
-	equal(engine.getBestMoveForBlack(), 'f7g6');
-	
-	engine.setFEN('8/6p1/q5R1/8/8/8/8/8 w - - 0 1');
-	equal(engine.board.getColorToMove(), BoardFactory.getColorMap().white);
-	equal(engine.getBestMoveForWhite(), 'g6a6');
+			engine.setFEN('q7/5p2/6R1/8/8/8/4PPPP/3k1K2 b - - 0 1');
+			//engine.board.dump();
+			engine.getBestMove(false, function(move)
+			{
+				equal(move, 'f7g6');
+				start();
+			});
+		});
+	});
+};
 
+var testSimpleBestMove2 = function()
+{
+	stop();
+	var engine = EngineFactory.create();
 	engine.setFEN('k7/6PR/8/8/8/8/8/7K w - - 0 1');
-	equal(engine.getBestMoveForWhite(), 'g7g8Q');
+	engine.getBestMove(true, function(move)
+	{
+		equal(move, 'g7g8Q');
 
-	engine.setFEN('k7/8/8/8/8/r7/5pPK/6BB b - - 0 1');
-	equal(engine.getBestMoveForBlack(), 'f2f1n');
+		engine.setFEN('k7/8/8/8/8/r7/5pPK/6BB b - - 0 1');
+		engine.getBestMove(false, function(move)
+		{
+			equal(move, 'f2f1n');
+			start();
+		});
+	});
+};
+
+var testSimpleBestMove3 = function()
+{
+	stop();
+	var engine = EngineFactory.create();
+	engine.setFEN('8/6p1/q5R1/8/8/8/8/2k1K3 w - - 0 1');
+	//engine.board.dump();
+	equal(engine.board.getColorToMove(), BoardFactory.getColorMap().white);
+	engine.getBestMove(true, function(move)
+	{
+		equal(move, 'g6a6');
+
+		engine.setFEN('6k1/6P1/6PB/6P1/2p3p1/n1r3pb/1P4p1/6K1 w - - 0 1');
+		//engine.board.dump();
+		engine.getBestMove(true, function(move)
+		{
+			equal(move, 'b2c3');
+			start();
+		});
+	});
 };
 
 var test2PlyBestMove = function()
 {
+	stop();
 	var engine = EngineFactory.create();
 	// have a choice...take the queen (and lose next turn)
 	// or take the en prise rook
 	engine.setFEN('5nk1/p4ppp/1q/1R5r/8/8/5PPP/5NK1 w - - 0 1');
 	//engine.board.dump();
-	equal(engine.getBestMoveForWhite(), 'b5h5');
+	engine.getBestMove(true, function(move)
+	{
+		equal(move, 'b5h5');
+		start();
+	});
 };
 
 var testStalemate = function()

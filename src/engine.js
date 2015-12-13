@@ -33,7 +33,7 @@ var EngineFactory;
 	Engine.init = function(board)
 	{
 		this.board = board;
-		this.searchPly = 3;
+		this.searchPly = 2;
 		this.resetCaches();
 		return this;
 	};
@@ -577,7 +577,7 @@ var EngineFactory;
 	{
 		var king = this.findPiece((white?'K':'k'));
 		if(king.length == 0)
-			return false;
+			throw new Error('Invalid position; missing king');
 
 		return this.isSquareAttacked(king[0].file, king[0].rank);
 	};
@@ -628,6 +628,8 @@ var EngineFactory;
 	// returns boolean if move was executed successfully
 	Engine.move = function(notation, skipValidCheck)
 	{
+		if(!notation)
+			throw new Error('Missing move! Remember that getBestMove is non-blocking!');
 		var skipValidCheck = skipValidCheck === true?true:false;
 		var start = FileMap.coords(notation.substr(0,2));
 		var end = FileMap.coords(notation.substr(2,2));
@@ -866,64 +868,6 @@ var EngineFactory;
 	{
 		return this.getBestMove(false);
 	};
-	
-	Engine.getBestMoveSimple = function(forWhite)
-	{
-		var moveValues = [];
-		for(var f = 1; f < 9; f++)
-		{
-			for(var r = 1; r < 9; r++)
-			{
-				if(!this.board.hasPiece(f, r))
-					continue;
-
-				if(PieceMap.isWhite(this.board.getPiece(f, r)) != forWhite)
-					continue;
-
-				var moves = this.getValidMovesForSquare(f,r);
-
-				if(moves.length == 0)
-					continue;
-
-				for(var i = 0; i < moves.length; i++)
-				{
-					var notation = '' + FileMap.name(f, r) + moves[i].name;
-					
-					// found checkmate. all done.
-					var val = this.evaluateMove(notation);
-					if(Math.abs(val) == 1000)
-						return notation;
-
-					// otherwise, keep track and we'll sort it later.
-					moveValues.push({ move: notation, value: val });
-				}
-			}
-		}
-
-		// which direction depends on which side we're looking at
-		var sorter = function(a,b)
-		{
-			return a.value - b.value;
-		};
-
-		if(forWhite)
-		{
-			var sorter = function(a,b)
-			{
-				return b.value - a.value;
-			};
-		}
-
-		moveValues.sort(sorter);
-
-		if(this.mark)
-		{
-			for(var i = 0; i < moveValues.length; i++)
-				console.log(moveValues[i].move + ': ' + moveValues[i].value);
-		}
-
-		return moveValues[0].move;
-	};
 
 	Engine.evaluateMove = function(notation)
 	{
@@ -942,51 +886,211 @@ var EngineFactory;
 	
 	var abExamined;
 	var fenEvals;
-	Engine.getBestMove = function(forWhite)
+	Engine.getBestMove = function(forWhite, callback)
 	{
 		this.lastBestMove = '';
 		this.lastValue = 0;
 		abExamined = 0;
 		fenEvals = {};
 		var start = new Date().getTime();
-		this.alphabeta(this.searchPly, -10000, 10000, forWhite);
-		var end = new Date().getTime();
-		var diff = (end - start) / 1000;
-		//this.board.dump();
-		console.log(
-			(forWhite?'white':'black') + ' to move'
-			+'; examined: ' + abExamined 
-			+ ' nodes in ' + diff + 's '
-			+ '(' + Math.round(abExamined / diff) + 'n/s)'
-			+ '; best: ' + this.lastBestMove
-			+ ' (' + this.lastValue + ')');
-		return this.lastBestMove;
+		var that = this;
+		var finish = function()
+		{
+			var end = new Date().getTime();
+			var diff = (end - start) / 1000;
+			//this.board.dump();
+			console.log(
+				(forWhite?'white':'black') + ' to move'
+				+'; examined: ' + abExamined 
+				+ ' nodes in ' + diff + 's '
+				+ '(' + Math.round(abExamined / diff) + 'n/s)'
+				+ '; best: ' + that.lastBestMove
+				+ ' (' + that.lastValue + ')');
+
+			if(typeof callback === 'function')
+				callback(that.lastBestMove);
+		};
+
+		// old way
+		if(true)
+		{
+			this.alphabetaOld(this.searchPly, -10000, 10000, forWhite);
+			finish();
+		}
+		else
+		{
+			this.organizeAndSearch(forWhite, finish);
+		}
 	};
 
 
-	// this doesn't work yet; working through my understanding of alphabeta.
-	Engine.alphabetaNew = function(depth, a, b, wantsMax)
+	// split up our work so we can potentially choose from 
+	// a few different reasonable lines
+	// and maybe parallelize a bit 
+	Engine.organizeAndSearch = function(forWhite, callback)
 	{
-		abExamined++;
-		// if we hit bottom, we simply return the evaluation here.
-		if(depth == 0)
-			return this.evaluatePosition();
-
-		var moves = this.getValidMovesFor(wantsMax);
-
+		var moves = this.getValidMovesFor(forWhite);
 		// if there are no moves, it's either checkmate or stalemate.
 		var numMoves = moves.length;
 		if(numMoves == 0)
-			return this.evaluatePosition();
+		{
+			this.lastValue = this.evaluatePosition();
+			callback();
+			return;
+		}
 
-		var val, cloned;
-		//console.log(moves);
+		this.moveOptions = [];
+
+		// first, loop and look for mates, then checks
+		var cloned = this.clone();
 		for(var i = 0; i < numMoves; i++)
 		{
-			cloned = this.clone();
+			abExamined++;
+			cloned.setFromBoard(this.board);
 			cloned.move(moves[i]);
-			val = cloned.alphabeta(depth - 1, a, b, !wantsMax);
-			//console.log(depth + ', ' + moves[i] + ', ' + val + ', a: ' + a + ', b: ' + b);
+
+			var value = 
+			{
+				move: moves[i],
+				win: cloned.inCheckmate(!forWhite),
+				check: cloned.inCheck(!forWhite),
+				value: cloned.evaluatePosition()
+			}
+
+			this.moveOptions.push(value);
+		}
+
+		// now sort it
+		// (remember; < 0 sorts higher)
+		this.moveOptions.sort(function(a, b)
+		{
+			if(a.win)
+			{
+				if(b.win)
+					return 0;
+				else
+					return -1;
+			}
+
+			if(b.win)
+				return 1;
+
+			if(a.check)
+			{
+				if(b.check)
+					return 0;
+				else
+					return -1;
+			}
+
+			if(b.check)
+				return 1;
+
+			return (b.value - a.value);
+		});
+
+		//console.log(this.moveOptions);
+		// if we have a win, we don't have to go any further
+		if(this.moveOptions[0].win)
+		{
+			this.lastBestMove = this.moveOptions[0].move;
+			this.lastValue = this.moveOptions[0].value;
+			callback();
+			return;
+		}
+
+		// otherwise, we divide and conquer.
+		var that = this;
+		that.threadCount = numMoves;
+		var startEval = function(idx)
+		{
+			//console.log(' starting ' + that.moveOptions[idx].move);
+			var cloned = that.clone();
+			cloned.move(that.moveOptions[idx].move);
+			cloned.alphabeta(that.searchPly - 1, -10000, 10000, !forWhite);
+			that.moveOptions[idx].value = cloned.lastValue;
+			//console.log('done with ' + that.moveOptions[idx].move + '; ' + cloned.lastValue);
+			that.threadCount--;
+
+			if(that.threadCount == 0)
+			{
+				that.moveOptions.sort(function(a,b)
+				{
+					return (b.value - a.value);
+				});
+
+				// which end? 
+				var wanted;
+				if(forWhite)
+					wanted = 0;
+				else
+					wanted = numMoves - 1;
+
+				that.lastBestMove = that.moveOptions[wanted].move;
+				that.lastValue = that.moveOptions[wanted].value;
+				callback();
+			}
+		};
+
+		console.log('there are ' + numMoves + ' initial moves to evaluate.');
+		for(var i = 0; i < numMoves; i++)
+		{
+			(function(idx)
+			{
+				setTimeout(function()
+				{
+					startEval(idx);
+				},0);
+			})(i);
+		}
+	};
+
+	Engine.alphabeta = function(depth, a, b, wantsMax)
+	{
+		abExamined++;
+
+		var moves = this.getValidMovesFor(wantsMax);
+		// if there are no moves, it's either checkmate or stalemate.
+		var numMoves = moves.length;
+		if(numMoves == 0)
+		{
+			//console.log('[no moves]');
+			return this.evaluatePosition();
+		}
+
+		//console.log(moves);
+		//console.log(depth + ' before move loop, a: ' + a + ', b: ' + b);
+		var val;
+		var cloned = this.clone();
+		for(var i = 0; i < numMoves; i++)
+		{
+			cloned.setFromBoard(this.board);
+			cloned.move(moves[i]);
+
+			//console.log(depth + ' examining ' + moves[i] + ' (want ' + (wantsMax?'max':'min') + ')');
+
+			// before we go deep, look for checkmate.
+			if(cloned.inCheckmate(!wantsMax))
+			{
+				//console.log('checkmate');
+				this.lastBestMove = moves[i];
+				this.lastValue = cloned.evaluatePosition();
+				if(wantsMax)
+					a = this.lastValue;
+				else
+					b = this.lastValue;
+				break;
+			}
+
+			if(depth == 0)
+			{
+				// for comparison with old
+				abExamined++;
+				val = cloned.evaluatePosition();
+			}
+			else
+				val = cloned.alphabeta(depth - 1, a, b, !wantsMax);
+			//console.log('result of ' + moves[i] + ': ' + val);
 			if(wantsMax)
 			{
 				if(a < val)
@@ -994,8 +1098,6 @@ var EngineFactory;
 					a = val;
 					this.lastBestMove = moves[i];
 					this.lastValue = val;
-					if(val == 1000)
-						break;
 				}
 			}
 			else
@@ -1005,25 +1107,30 @@ var EngineFactory;
 					b = val;
 					this.lastBestMove = moves[i];
 					this.lastValue = val;
-					if(val == -1000)
-						break;
 				}
 			}
 
 			// no point in continuing; prune
 			if(b <= a)
+			{
+				//console.log('prune');
 				break;
+			}
 		}
-
+		//console.log(depth + ' after move loop: ' + this.lastBestMove + ', a: ' + a + ', b: ' + b);
+		var ret;
 		if(wantsMax)
-			return b;
+			ret = a;
 		else
-			return a;
+			ret = b;
+
+		//console.log('returning ' + (wantsMax?'max ':'min ') + ret + ' (' + this.lastBestMove + ')');
+		return ret;
 	};
 
 
 
-	Engine.alphabeta = function(depth, a, b, isWhite)
+	Engine.alphabetaOld = function(depth, a, b, isWhite)
 	{
 		abExamined++;
 		var val;
@@ -1060,7 +1167,7 @@ var EngineFactory;
 					break;
 				}
 
-				val = board.alphabeta(depth - 1, a, b, !isWhite);
+				val = board.alphabetaOld(depth - 1, a, b, !isWhite);
 
 				if(a < val)
 				{

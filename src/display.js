@@ -413,41 +413,44 @@
 			// what about stalemate?
 
 
+			var completeMove = function(myMove)
+			{
+				that.engine.move(myMove);
+				that.animate(myMove);
+				that.thinking = false;
+				that.element.find('.thinking').hide();
+
+				// see if they're in checkmate / stalemate
+				checkmate = that.engine.whiteInCheckmate();
+				stalemate = that.engine.inStalemate(true);
+				if(checkmate || stalemate)
+				{
+					that.element.find('.game-over').show();
+					if(checkmate)
+						that.element.find('.you-lose').show();
+					else
+						that.element.find('.draw').show();
+
+					return;
+				}
+				else
+				{
+					that.element.find('.your-move').show();
+				}
+			};
+
 			// then check our opening book
 			var book = OpeningBook[that.getFEN()];
-
 			if(book)
 			{
 				var which = Math.round(Math.random() * (book.length - 1));
 				myMove = book[which];
-				console.log("book move used");
+				//console.log("book move used");
+				completeMove(myMove);
 			}
 			else
 			{
-				myMove = that.engine.getBestMoveForBlack();
-			}
-
-			that.engine.move(myMove);
-			that.animate(myMove);
-			that.thinking = false;
-			that.element.find('.thinking').hide();
-
-			// see if they're in checkmate / stalemate
-			checkmate = that.engine.whiteInCheckmate();
-			stalemate = that.engine.inStalemate(true);
-			if(checkmate || stalemate)
-			{
-				that.element.find('.game-over').show();
-				if(checkmate)
-					that.element.find('.you-lose').show();
-				else
-					that.element.find('.draw').show();
-
-				return;
-			}
-			else
-			{
-				that.element.find('.your-move').show();
+				myMove = that.engine.getBestMove(false, completeMove);
 			}
 		// attempt to let the UI do other things
 		}, 20);
