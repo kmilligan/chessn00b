@@ -52,5 +52,10 @@ First pass, the internal board representation was a 2-D array of "square" object
 * https://cis.uab.edu/hyatt/boardrep.html
 * https://chessprogramming.wikispaces.com/Board+Representation
 
-...so I tried the "10x12" 1-D array representation. While a number of my test cases seemed to improve, the practical performance was about the same, as far as "nodes per second". I got a bigger performance gain by changing the way I cloned the board during the evaluation cycle; using a method that understands the board internals rather than setting it via FEN was much faster.
+...so I tried the "10x12" 1-D array representation. While a number of my test cases seemed to improve, the practical performance was about the same, as far as "nodes per second". I got a bigger performance gain by changing the way I cloned the board during the evaluation cycle; using a method that understands the board internals rather than setting it via FEN was much faster (which seems obvious, but hindsight is 20/20...).
+
+One thing to come to grips with is the sheer number of possible positions to evaluate; if you consider that on any given move, there might be, for example, 30 different possible legal moves, and for each one of those, 30-ish possible legal responses, and so on, you are at 27,000 positions after just 3 "ply". Typically, these game trees are evaluated using a minimax algorithm with alpha-beta pruning, as outlined here:
+
+* http://web.cs.ucla.edu/~rosen/161/notes/alphabeta.html
+
 

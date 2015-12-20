@@ -340,8 +340,8 @@ var testDynamicPieceValue = function()
 {
 	var engine = EngineFactory.create();
 	engine.setFEN('2b1kb2/8/8/8/8/8/8/3QK3 w - - 0 1');	
-	equal(engine.getWhiteDynamicValue(), 12);	
-	equal(engine.getBlackDynamicValue(), 15);	
+	equal(engine.getWhiteDynamicValue(), 17);	
+	equal(engine.getBlackDynamicValue(), 15);
 };
 
 var testSimpleMove = function()

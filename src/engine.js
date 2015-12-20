@@ -33,7 +33,8 @@ var EngineFactory;
 	Engine.init = function(board)
 	{
 		this.board = board;
-		this.searchPly = 2;
+		// this is really only applicable to the old way
+		this.searchPly = 3;
 		this.resetCaches();
 		return this;
 	};
@@ -857,6 +858,34 @@ var EngineFactory;
 
 		var covers = this.getWhitesCoveredSquares();
 		this.whiteDynamicValue += Math.round(covers.length / divisor);
+
+		// relatively speaking, which side has more pieces in action?
+		// (not clear this is not covered by looking at coverage,
+		// but we seem to need someway to evaluate relative tempi in opening)
+		var whiteOrigSq = 0;
+		var blackOrigSq = 0;
+		if(this.board.getPiece(2,1) == 'N')
+			whiteOrigSq++;
+		if(this.board.getPiece(3,1) == 'B')
+			whiteOrigSq++;
+		if(this.board.getPiece(6,1) == 'B')
+			whiteOrigSq++;
+		if(this.board.getPiece(7,1) == 'N')
+			whiteOrigSq++;
+		
+		if(this.board.getPiece(2,8) == 'n')
+			blackOrigSq++;
+		if(this.board.getPiece(3,8) == 'b')
+			blackOrigSq++;
+		if(this.board.getPiece(6,8) == 'b')
+			blackOrigSq++;
+		if(this.board.getPiece(7,8) == 'n')
+			blackOrigSq++;
+	
+		if(whiteOrigSq > blackOrigSq)
+			this.blackDynamicValue += 5;
+		if(blackOrigSq > whiteOrigSq)
+			this.whiteDynamicValue += 5;
 	};
 
 	Engine.getBestMoveForWhite = function()
@@ -885,6 +914,8 @@ var EngineFactory;
 	};
 	
 	var abExamined;
+	var stopThinking;
+	var startedThinking;
 	var fenEvals;
 	Engine.getBestMove = function(forWhite, callback)
 	{
@@ -911,8 +942,12 @@ var EngineFactory;
 				callback(that.lastBestMove);
 		};
 
+		// so we don't run out of time
+		stopThinking = false;
+		startedThinking = new Date().getTime();
+
 		// old way
-		if(true)
+		if(false)
 		{
 			this.alphabetaOld(this.searchPly, -10000, 10000, forWhite);
 			finish();
@@ -925,12 +960,16 @@ var EngineFactory;
 
 
 	// split up our work so we can potentially choose from 
-	// a few different reasonable lines
-	// and maybe parallelize a bit 
+	// a few different reasonable lines.
+	// also, since we want to limit the amount of time we spend "thinking",
+	// and alphabeta is depth-first, and we only have one thread available,
+	// we need to mix up a strategy a bit.
 	Engine.organizeAndSearch = function(forWhite, callback)
 	{
 		var moves = this.getValidMovesFor(forWhite);
-		// if there are no moves, it's either checkmate or stalemate.
+
+		// if there are no moves, it's either checkmate or stalemate,
+		// and we're done.
 		var numMoves = moves.length;
 		if(numMoves == 0)
 		{
@@ -939,9 +978,38 @@ var EngineFactory;
 			return;
 		}
 
+		// otherwise, we've got more work to do.
 		this.moveOptions = [];
 
-		// first, loop and look for mates, then checks
+		// useful for debugging
+		var that = this;
+		var dumpMoves = function(title)
+		{
+			console.log(title);
+			for(var i = 0; i < numMoves; i++)
+			{
+				console.log(' ' + that.moveOptions[i].move + ': ' + that.moveOptions[i].value);
+			}
+		};
+
+		// our sorting function depends on who we're working for
+		var sorter;
+		if(forWhite)
+		{
+			sorter = function(a,b)
+			{
+				return (b.value - a.value);
+			};
+		}
+		else
+		{
+			sorter = function(a,b)
+			{
+				return (a.value - b.value);
+			};
+		}
+
+		// populate our initial options list
 		var cloned = this.clone();
 		for(var i = 0; i < numMoves; i++)
 		{
@@ -949,49 +1017,24 @@ var EngineFactory;
 			cloned.setFromBoard(this.board);
 			cloned.move(moves[i]);
 
-			var value = 
+			var moveOption = 
 			{
-				move: moves[i],
-				win: cloned.inCheckmate(!forWhite),
-				check: cloned.inCheck(!forWhite),
-				value: cloned.evaluatePosition()
+				move: moves[i]
 			}
 
-			this.moveOptions.push(value);
+			moveOption.engine = this.clone();
+			moveOption.engine.move(moves[i]);
+			moveOption.value = moveOption.engine.evaluatePosition()
+
+			this.moveOptions.push(moveOption);
 		}
 
 		// now sort it
-		// (remember; < 0 sorts higher)
-		this.moveOptions.sort(function(a, b)
-		{
-			if(a.win)
-			{
-				if(b.win)
-					return 0;
-				else
-					return -1;
-			}
-
-			if(b.win)
-				return 1;
-
-			if(a.check)
-			{
-				if(b.check)
-					return 0;
-				else
-					return -1;
-			}
-
-			if(b.check)
-				return 1;
-
-			return (b.value - a.value);
-		});
-
-		//console.log(this.moveOptions);
+		this.moveOptions.sort(sorter);
+	
+		//dumpMoves('first pass');
 		// if we have a win, we don't have to go any further
-		if(this.moveOptions[0].win)
+		if(Math.abs(this.moveOptions[0].value) == 1000)
 		{
 			this.lastBestMove = this.moveOptions[0].move;
 			this.lastValue = this.moveOptions[0].value;
@@ -999,50 +1042,50 @@ var EngineFactory;
 			return;
 		}
 
-		// otherwise, we divide and conquer.
-		var that = this;
-		that.threadCount = numMoves;
-		var startEval = function(idx)
+		var depth = 1;
+		var numMoves = Math.floor(this.moveOptions.length / 4);
+		var maxTime = 1000;
+		var now, diff;
+
+		var evalPly = function(depth, numMoves)
 		{
-			//console.log(' starting ' + that.moveOptions[idx].move);
-			var cloned = that.clone();
-			cloned.move(that.moveOptions[idx].move);
-			cloned.alphabeta(that.searchPly - 1, -10000, 10000, !forWhite);
-			that.moveOptions[idx].value = cloned.lastValue;
-			//console.log('done with ' + that.moveOptions[idx].move + '; ' + cloned.lastValue);
-			that.threadCount--;
-
-			if(that.threadCount == 0)
+			for(var i = 0; i < numMoves; i++)
 			{
-				that.moveOptions.sort(function(a,b)
+				that.moveOptions[i].engine.alphabeta(depth, -10000, 10000, !forWhite);
+				// out of time?
+				now = new Date().getTime();
+				diff = now - startedThinking;
+				if(diff > maxTime)
 				{
-					return (b.value - a.value);
-				});
-
-				// which end? 
-				var wanted;
-				if(forWhite)
-					wanted = 0;
-				else
-					wanted = numMoves - 1;
-
-				that.lastBestMove = that.moveOptions[wanted].move;
-				that.lastValue = that.moveOptions[wanted].value;
-				callback();
+					//console.log('out of time');
+					stopThinking = true;
+					break;
+				}
 			}
 		};
 
-		console.log('there are ' + numMoves + ' initial moves to evaluate.');
-		for(var i = 0; i < numMoves; i++)
+		// we will loop over as time allows
+		while(true)
 		{
-			(function(idx)
-			{
-				setTimeout(function()
-				{
-					startEval(idx);
-				},0);
-			})(i);
+			//console.log('evaluating ' + numMoves + ' moves...');
+			evalPly(depth, numMoves);
+			this.moveOptions.sort(sorter);
+			this.lastBestMove = this.moveOptions[0].move;
+			this.lastValue = this.moveOptions[0].value;
+			//dumpMoves('pass ' + (depth + 1));
+
+			// out of time?
+			if(stopThinking)
+				break;
+
+			// otherwise, try a smaller set, a little deeper
+			depth++;
+			numMoves = Math.floor(numMoves / 2);
+			if(numMoves == 0)
+				break;
 		}
+
+		callback();
 	};
 
 	Engine.alphabeta = function(depth, a, b, wantsMax)
@@ -1064,6 +1107,13 @@ var EngineFactory;
 		var cloned = this.clone();
 		for(var i = 0; i < numMoves; i++)
 		{
+			// out of time
+			if(stopThinking)
+			{
+				console.log('time break');
+				break;
+			}
+
 			cloned.setFromBoard(this.board);
 			cloned.move(moves[i]);
 
