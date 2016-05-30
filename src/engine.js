@@ -409,16 +409,18 @@ var EngineFactory;
 
 	Engine.determineCoveredSquares = function(forWhite)
 	{
+
 		// already figured this out?
 		if( (forWhite && this.whiteCoveredSquares.length > 0 )
 			|| (!forWhite && this.blackCoveredSquares.legnth > 0 ))
 			return;
 
+		var arr;
 		if(forWhite)
-			this.whiteCoveredSquares = [];
+			arr = this.whiteCoveredSquares = [];
 	
 		if(!forWhite)
-			this.blackCoveredSquares = [];
+			arr = this.blackCoveredSquares = [];
 
 		// loop all the squares, finding the ones with pieces
 		// for each piece, determine coverage
@@ -437,11 +439,6 @@ var EngineFactory;
 
 				covered = this.board.getCoveredSquares(f,r);
 
-				// push onto the appropriate color array
-				var arr = this.blackCoveredSquares;
-				if(isWhite)
-					arr = this.whiteCoveredSquares;
-
 				for(var i = 0; i < covered.length; i++)
 					arr.push(covered[i]);
 			}
@@ -450,6 +447,11 @@ var EngineFactory;
 
 	Engine.findPiece = function(piece)
 	{
+		if(piece == 'K' && this.kingLocWhite)
+			return this.kingLocWhite;
+		if(piece == 'k' && this.kingLocBlack)
+			return this.kingLocBlack;
+
 		var found = [];
 		for(var f = 1; f < 9; f++)
 		{
@@ -462,6 +464,12 @@ var EngineFactory;
 					found.push({ file: f, rank: r });
 			}
 		}
+
+		if(piece == 'K')
+			this.kingLocWhite = found;
+		if(piece == 'k')
+			this.kingLocBlack = found;
+
 		return found;
 	};
 
@@ -664,6 +672,14 @@ var EngineFactory;
 
 		// castling? need to find and move the rook too.
 		var isKing = (piece == 'k' || piece == 'K')?true:false;
+
+		if(isKing)
+		{
+			this.kingLocBlack = null;
+			this.kingLocWhite = null;
+		}
+
+
 		if(isKing && Math.abs(start.file - end.file) == 2)
 		{
 			var rookSquare;
